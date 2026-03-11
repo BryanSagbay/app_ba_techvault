@@ -1,2 +1,5 @@
 # app_ba_techvault
 App to organize and maintain order at work.
+
+
+quiero desarrollar una app de java 21 que ocupe localmente cosas de la maquina es decir poder mandar a guardar en directorios, manejar de directorios  de que trata la app es para mas que todo documentar todo lo de mi area un sistema donde pueda revisar problemas que se presento como se solvento tarea numero etc todos esos datos, ademas tambien debo guardar las ips de servidores, manuales, un gestor de contraseñas, una parte para tener tareas y ir haciendo, tambien como notas un apartado,donde tambien guarde comando osea que sea super odernado ya que voy a estar a carga de servidores, desarrrollador de software donde estoy en la area de correctivo osea corrigo los errores presentados en los servicios de un banco y eso quiero desarrollar una app con java que sea de aplicaicon de escritorio ya que nada puede salir de mi pc a la nube tood es controlado pro eso digo algo que guarde localmente y consuma localmente que me recomendarias hacer o si tienes dudas preguntame
