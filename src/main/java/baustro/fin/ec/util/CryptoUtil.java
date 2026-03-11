@@ -3,50 +3,129 @@ package baustro.fin.ec.util;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
 /**
- * Cifrado AES-256 para el gestor de contraseñas.
- * La clave maestra se define aquí — puedes cambiarla antes de compilar.
+ * Utilidad de cifrado AES-256-GCM para el gestor de contraseñas.
+ * - Las contraseñas se cifran con AES-256-GCM
+ * - El master password se valida con PBKDF2WithHmacSHA256
+ * - Nunca se guarda el master password en texto plano
  */
 public class CryptoUtil {
 
-    // ⚠️  CAMBIA ESTO antes de usar en producción
-    private static final String MASTER_KEY = "OpsManager@Secure#2024!BancoBaustro";
-    private static final String SALT = "OpsMgrSalt8291";
-    private static final byte[] IV = "OpsManager16ByteIV".substring(0, 16).getBytes();
+    private static final String ALGORITHM      = "AES/GCM/NoPadding";
+    private static final String KEY_ALGORITHM  = "AES";
+    private static final String KDF_ALGORITHM  = "PBKDF2WithHmacSHA256";
+    private static final int    KEY_LENGTH     = 256;
+    private static final int    GCM_TAG_LENGTH = 128;
+    private static final int    GCM_IV_LENGTH  = 12;
+    private static final int    SALT_LENGTH    = 16;
+    private static final int    KDF_ITERATIONS = 310_000;
 
-    private static SecretKey getKey() throws Exception {
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-        KeySpec spec = new PBEKeySpec(MASTER_KEY.toCharArray(), SALT.getBytes(), 65536, 256);
-        byte[] keyBytes = factory.generateSecret(spec).getEncoded();
-        return new SecretKeySpec(keyBytes, "AES");
+    // Clave de sesión derivada del master password (solo vive en memoria)
+    private static SecretKey sessionKey;
+
+    // ----------------------------------------------------------------
+    // MASTER PASSWORD
+    // ----------------------------------------------------------------
+
+    /** Genera un salt aleatorio en Base64 */
+    public static String generateSalt() {
+        byte[] salt = new byte[SALT_LENGTH];
+        new SecureRandom().nextBytes(salt);
+        return Base64.getEncoder().encodeToString(salt);
     }
 
-    public static String encrypt(String plainText) {
+    /** Hashea el master password con PBKDF2 para guardar en config */
+    public static String hashMasterPassword(String password, String saltB64) throws Exception {
+        byte[] salt = Base64.getDecoder().decode(saltB64);
+        SecretKeyFactory skf = SecretKeyFactory.getInstance(KDF_ALGORITHM);
+        PBEKeySpec spec = new PBEKeySpec(
+                password.toCharArray(), salt, KDF_ITERATIONS, KEY_LENGTH);
+        byte[] hash = skf.generateSecret(spec).getEncoded();
+        return Base64.getEncoder().encodeToString(hash);
+    }
+
+    /** Verifica si el master password ingresado coincide con el hash guardado */
+    public static boolean verifyMasterPassword(String input, String storedHash, String saltB64) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, getKey(), new IvParameterSpec(IV));
-            byte[] encrypted = cipher.doFinal(plainText.getBytes("UTF-8"));
-            return Base64.getEncoder().encodeToString(encrypted);
+            String inputHash = hashMasterPassword(input, saltB64);
+            return MessageDigest.isEqual(
+                    Base64.getDecoder().decode(inputHash),
+                    Base64.getDecoder().decode(storedHash));
         } catch (Exception e) {
-            e.printStackTrace();
-            return plainText;
+            return false;
         }
     }
 
-    public static String decrypt(String encryptedText) {
-        try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, getKey(), new IvParameterSpec(IV));
-            byte[] decoded = Base64.getDecoder().decode(encryptedText);
-            return new String(cipher.doFinal(decoded), "UTF-8");
-        } catch (Exception e) {
-            return "[Error al descifrar]";
-        }
+    /**
+     * Carga el master password en sesión derivando la clave AES.
+     * Debe llamarse después de verificar correctamente el master password.
+     */
+    public static void loadSessionKey(String password, String saltB64) throws Exception {
+        byte[] salt = Base64.getDecoder().decode(saltB64);
+        SecretKeyFactory skf = SecretKeyFactory.getInstance(KDF_ALGORITHM);
+        PBEKeySpec spec = new PBEKeySpec(
+                password.toCharArray(), salt, KDF_ITERATIONS, KEY_LENGTH);
+        byte[] keyBytes = skf.generateSecret(spec).getEncoded();
+        sessionKey = new SecretKeySpec(keyBytes, KEY_ALGORITHM);
+    }
+
+    /** Limpia la clave de sesión de memoria (al cerrar el módulo) */
+    public static void clearSession() {
+        sessionKey = null;
+    }
+
+    public static boolean isSessionActive() {
+        return sessionKey != null;
+    }
+
+    // ----------------------------------------------------------------
+    // CIFRADO / DESCIFRADO
+    // ----------------------------------------------------------------
+
+    /** Cifra un texto con AES-256-GCM usando la clave de sesión */
+    public static String encrypt(String plaintext) throws Exception {
+        if (sessionKey == null) throw new IllegalStateException("Sesión no activa");
+
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        new SecureRandom().nextBytes(iv);
+
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, sessionKey,
+                new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+
+        byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
+
+        // Formato: iv(12 bytes) + ciphertext → Base64
+        byte[] combined = new byte[iv.length + ciphertext.length];
+        System.arraycopy(iv, 0, combined, 0, iv.length);
+        System.arraycopy(ciphertext, 0, combined, iv.length, ciphertext.length);
+
+        return Base64.getEncoder().encodeToString(combined);
+    }
+
+    /** Descifra un texto cifrado con AES-256-GCM usando la clave de sesión */
+    public static String decrypt(String encryptedB64) throws Exception {
+        if (sessionKey == null) throw new IllegalStateException("Sesión no activa");
+
+        byte[] combined = Base64.getDecoder().decode(encryptedB64);
+        byte[] iv         = new byte[GCM_IV_LENGTH];
+        byte[] ciphertext = new byte[combined.length - GCM_IV_LENGTH];
+        System.arraycopy(combined, 0, iv, 0, GCM_IV_LENGTH);
+        System.arraycopy(combined, GCM_IV_LENGTH, ciphertext, 0, ciphertext.length);
+
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, sessionKey,
+                new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+
+        return new String(cipher.doFinal(ciphertext), "UTF-8");
     }
 }
