@@ -26,21 +26,21 @@
             <version>3.45.1.0</version>
         </dependency>
 
-        <!-- FlatLaf - Tema moderno para Swing -->
+        <!-- FlatLaf - Look and Feel moderno para Swing -->
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
             <version>3.4</version>
         </dependency>
 
-        <!-- FlatLaf Extras -->
+        <!-- Bouncy Castle para cifrado AES del gestor de contrasenas -->
         <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf-extras</artifactId>
-            <version>3.4</version>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78.1</version>
         </dependency>
 
-        <!-- SLF4J NOP: elimina el warning "Failed to load StaticLoggerBinder" -->
+        <!-- Silenciar warning SLF4J de SQLite -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
