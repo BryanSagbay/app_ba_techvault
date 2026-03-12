@@ -47,8 +47,8 @@ public class IconManager {
 
         // Try loading from resources/icons/
         String[] paths = {
-            "/iconos/" + name + ".png",
-            "/iconos/" + name + ".PNG",
+            "/icons/" + name + ".png",
+            "/icons/" + name + ".PNG",
         };
 
         for (String path : paths) {

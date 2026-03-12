@@ -11,11 +11,23 @@ public class DatabaseManager {
     private static DatabaseManager instance;
     private Connection connection;
 
-    // La BD se guarda en: C:\Users\<User>\AppData\Local\TechOpsManager\techops.db
-    private static final String DB_DIR = System.getProperty("user.home")
-            + File.separator + "AppData" + File.separator + "Local"
-            + File.separator + "TechOpsManager";
-    private static final String DB_PATH = DB_DIR + File.separator + "techops.db";
+    // La BD se guarda en:
+    //   Windows: C:\Users\<User>\AppData\Local\TechOpsManager\techops.db
+    //   macOS:   /Users/<User>/.techopsmanager/techops.db
+    //   Linux:   /home/<User>/.techopsmanager/techops.db
+    private static final String DB_DIR;
+    private static final String DB_PATH;
+
+    static {
+        String os = System.getProperty("os.name", "").toLowerCase();
+        String home = System.getProperty("user.home");
+        if (os.contains("win")) {
+            DB_DIR  = home + File.separator + "AppData" + File.separator + "Local" + File.separator + "TechOpsManager";
+        } else {
+            DB_DIR  = home + File.separator + ".techopsmanager";
+        }
+        DB_PATH = DB_DIR + File.separator + "techops.db";
+    }
 
     private DatabaseManager() {
         initDatabase();
@@ -40,7 +52,13 @@ public class DatabaseManager {
             }
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-            connection.createStatement().execute("PRAGMA foreign_keys = ON");
+            Statement pragma = connection.createStatement();
+            pragma.execute("PRAGMA foreign_keys = ON");
+            pragma.execute("PRAGMA journal_mode = WAL");       // Faster writes, no lock contention
+            pragma.execute("PRAGMA synchronous = NORMAL");     // Balance durability/speed
+            pragma.execute("PRAGMA cache_size = -8000");       // 8MB page cache
+            pragma.execute("PRAGMA temp_store = MEMORY");      // Temp tables in RAM
+            pragma.close();
             createTables();
         } catch (Exception e) {
             throw new RuntimeException("Error inicializando base de datos: " + e.getMessage(), e);
@@ -164,7 +182,13 @@ public class DatabaseManager {
         try {
             if (connection == null || connection.isClosed()) {
                 connection = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-                connection.createStatement().execute("PRAGMA foreign_keys = ON");
+                Statement pragma = connection.createStatement();
+            pragma.execute("PRAGMA foreign_keys = ON");
+            pragma.execute("PRAGMA journal_mode = WAL");       // Faster writes, no lock contention
+            pragma.execute("PRAGMA synchronous = NORMAL");     // Balance durability/speed
+            pragma.execute("PRAGMA cache_size = -8000");       // 8MB page cache
+            pragma.execute("PRAGMA temp_store = MEMORY");      // Temp tables in RAM
+            pragma.close();
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error reconnectando BD", e);

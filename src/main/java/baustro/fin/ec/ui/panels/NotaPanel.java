@@ -8,6 +8,8 @@ import baustro.fin.ec.util.IconManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -59,13 +61,32 @@ public class NotaPanel extends JPanel {
         JPanel leftPanel = new JPanel(new BorderLayout(0, 0));
         leftPanel.setBackground(UIConstants.BG_PANEL);
 
-        searchField = StyledComponents.styledTextField("Buscar notas...");
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+        // SearchBar con icono en la barra lateral de notas
+        JPanel searchWrap = new JPanel(new BorderLayout(0,0));
+        searchWrap.setBackground(UIConstants.BG_INPUT);
+        searchWrap.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0,0,1,0,UIConstants.BORDER),
+                BorderFactory.createEmptyBorder(0,0,0,0)));
+        JLabel searchIco = new JLabel();
+        searchIco.setOpaque(true); searchIco.setBackground(UIConstants.BG_INPUT);
+        searchIco.setBorder(BorderFactory.createEmptyBorder(0,8,0,4));
+        ImageIcon _sico = baustro.fin.ec.util.IconManager.getSmallIcon(baustro.fin.ec.util.IconManager.ICON_SEARCH);
+        if(_sico!=null&&_sico.getIconWidth()>1) searchIco.setIcon(_sico);
+        else { searchIco.setText("Q"); searchIco.setFont(UIConstants.FONT_SMALL); searchIco.setForeground(UIConstants.TEXT_MUTED); }
+        searchField = new JTextField();
+        searchField.setBackground(UIConstants.BG_INPUT); searchField.setForeground(UIConstants.TEXT_MUTED);
+        searchField.setCaretColor(UIConstants.TEXT_PRIMARY); searchField.setFont(UIConstants.FONT_BODY);
+        searchField.setBorder(BorderFactory.createEmptyBorder(8,0,8,8));
+        searchField.setText("Buscar notas...");
+        searchField.addFocusListener(new FocusAdapter(){
+            public void focusGained(FocusEvent e){ if("Buscar notas...".equals(searchField.getText())){searchField.setText("");searchField.setForeground(UIConstants.TEXT_PRIMARY);}}
+            public void focusLost(FocusEvent e){ if(searchField.getText().isEmpty()){searchField.setText("Buscar notas...");searchField.setForeground(UIConstants.TEXT_MUTED);}}
+        });
         searchField.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) { doSearch(); }
         });
+        searchWrap.add(searchIco,BorderLayout.WEST);
+        searchWrap.add(searchField,BorderLayout.CENTER);
 
         listModel = new DefaultListModel<>();
         noteList = new JList<>(listModel);
@@ -80,7 +101,7 @@ public class NotaPanel extends JPanel {
             if (!e.getValueIsAdjusting()) openNota(noteList.getSelectedValue());
         });
 
-        leftPanel.add(searchField, BorderLayout.NORTH);
+        leftPanel.add(searchWrap, BorderLayout.NORTH);
         leftPanel.add(new JScrollPane(noteList) {{ setBorder(null); getViewport().setBackground(UIConstants.BG_PANEL); }}, BorderLayout.CENTER);
 
         // RIGHT: Editor
@@ -172,7 +193,8 @@ public class NotaPanel extends JPanel {
     }
 
     private void doSearch() {
-        String q = searchField.getText().trim();
+        String raw = searchField.getText().trim();
+        String q = raw.equals("Buscar notas...") ? "" : raw;
         try {
             List<Nota> result = q.isEmpty() ? dao.findAll() : dao.search(q);
             listModel.clear();

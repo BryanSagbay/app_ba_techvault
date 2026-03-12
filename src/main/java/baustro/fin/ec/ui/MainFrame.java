@@ -7,12 +7,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainFrame extends JFrame {
 
     private JPanel contentPanel;
     private CardLayout cardLayout;
     private JPanel activeNavBtn;
+
+    // Lazy-loaded panels — solo se crean cuando se necesitan
+    private final Map<String, JPanel> loadedPanels = new HashMap<>();
 
     private static final String PANEL_DASHBOARD  = "dashboard";
     private static final String PANEL_CORRECTIVO = "correctivos";
@@ -44,20 +49,81 @@ public class MainFrame extends JFrame {
         contentPanel.setLayout(cardLayout);
         contentPanel.setBackground(UIConstants.BG_DARK);
 
-        contentPanel.add(new DashboardPanel(),  PANEL_DASHBOARD);
-        contentPanel.add(new CorrectivoPanel(), PANEL_CORRECTIVO);
-        contentPanel.add(new ServidorPanel(),   PANEL_SERVIDOR);
-        contentPanel.add(new ContrasenaPanel(), PANEL_PASSWORD);
-        contentPanel.add(new TareaPanel(),      PANEL_TAREA);
-        contentPanel.add(new NotaPanel(),       PANEL_NOTA);
-        contentPanel.add(new ComandoPanel(),    PANEL_COMANDO);
+        // Solo carga el Dashboard al inicio — el resto se carga on-demand
+        showPanel(PANEL_DASHBOARD);
 
         add(buildSidebar(), BorderLayout.WEST);
         add(contentPanel,   BorderLayout.CENTER);
-
-        cardLayout.show(contentPanel, PANEL_DASHBOARD);
     }
 
+    /**
+     * Muestra un panel: si ya fue creado lo reutiliza, si no lo crea en un
+     * SwingWorker para no bloquear el EDT durante la consulta inicial a SQLite.
+     */
+    private void showPanel(String panelName) {
+        if (loadedPanels.containsKey(panelName)) {
+            // Ya existe — cambio instantáneo
+            cardLayout.show(contentPanel, panelName);
+            return;
+        }
+
+        // Primera vez: mostrar spinner mientras carga
+        JPanel spinner = buildSpinner();
+        String spinnerKey = panelName + "_loading";
+        contentPanel.add(spinner, spinnerKey);
+        cardLayout.show(contentPanel, spinnerKey);
+
+        SwingWorker<JPanel, Void> worker = new SwingWorker<>() {
+            @Override
+            protected JPanel doInBackground() {
+                // Crear el panel fuera del EDT para no freezar la UI
+                return createPanel(panelName);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    JPanel panel = get();
+                    loadedPanels.put(panelName, panel);
+                    contentPanel.add(panel, panelName);
+                    cardLayout.show(contentPanel, panelName);
+                    // Quitar spinner
+                    contentPanel.remove(spinner);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    cardLayout.show(contentPanel, panelName);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private JPanel createPanel(String panelName) {
+        return switch (panelName) {
+            case PANEL_DASHBOARD  -> new DashboardPanel();
+            case PANEL_CORRECTIVO -> new CorrectivoPanel();
+            case PANEL_SERVIDOR   -> new ServidorPanel();
+            case PANEL_PASSWORD   -> new ContrasenaPanel();
+            case PANEL_TAREA      -> new TareaPanel();
+            case PANEL_NOTA       -> new NotaPanel();
+            case PANEL_COMANDO    -> new ComandoPanel();
+            default               -> new JPanel();
+        };
+    }
+
+    private JPanel buildSpinner() {
+        JPanel p = new JPanel(new GridBagLayout());
+        p.setBackground(UIConstants.BG_DARK);
+        JLabel lbl = new JLabel("Cargando...");
+        lbl.setFont(UIConstants.FONT_HEADING);
+        lbl.setForeground(UIConstants.TEXT_MUTED);
+        p.add(lbl);
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SIDEBAR
+    // ─────────────────────────────────────────────────────────────
     private JPanel buildSidebar() {
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
@@ -70,32 +136,29 @@ public class MainFrame extends JFrame {
         logoPanel.setBackground(UIConstants.BG_DARK);
         logoPanel.setBorder(BorderFactory.createEmptyBorder(18, 16, 18, 16));
         logoPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
-
         JLabel appName = new JLabel("TechOps Manager");
         appName.setFont(new Font("Segoe UI", Font.BOLD, 14));
         appName.setForeground(UIConstants.TEXT_PRIMARY);
-
         ImageIcon appIcon = IconManager.getNavIcon(IconManager.ICON_APP);
         if (appIcon != null && appIcon.getIconWidth() > 1) appName.setIcon(appIcon);
-
         logoPanel.add(appName, BorderLayout.CENTER);
         sidebar.add(logoPanel);
 
         sidebar.add(sectionLabel("PRINCIPAL"));
-        JPanel btnDash = navButton("Dashboard",      IconManager.ICON_DASHBOARD,  PANEL_DASHBOARD);
+        JPanel btnDash = navButton("Dashboard",     IconManager.ICON_DASHBOARD,  PANEL_DASHBOARD);
         sidebar.add(btnDash);
         activeNavBtn = btnDash;
         setNavActive(btnDash, true);
 
         sidebar.add(sectionLabel("GESTION"));
-        sidebar.add(navButton("Correctivos",         IconManager.ICON_CORRECTIVO, PANEL_CORRECTIVO));
-        sidebar.add(navButton("Servidores & IPs",    IconManager.ICON_SERVIDOR,   PANEL_SERVIDOR));
+        sidebar.add(navButton("Correctivos",        IconManager.ICON_CORRECTIVO, PANEL_CORRECTIVO));
+        sidebar.add(navButton("Servidores & IPs",   IconManager.ICON_SERVIDOR,   PANEL_SERVIDOR));
 
         sidebar.add(sectionLabel("HERRAMIENTAS"));
-        sidebar.add(navButton("Contrasenas",         IconManager.ICON_PASSWORD,   PANEL_PASSWORD));
-        sidebar.add(navButton("Tareas & To-Do",      IconManager.ICON_TAREA,      PANEL_TAREA));
-        sidebar.add(navButton("Notas",               IconManager.ICON_NOTA,       PANEL_NOTA));
-        sidebar.add(navButton("Comandos",            IconManager.ICON_COMANDO,    PANEL_COMANDO));
+        sidebar.add(navButton("Contrasenas",        IconManager.ICON_PASSWORD,   PANEL_PASSWORD));
+        sidebar.add(navButton("Tareas & To-Do",     IconManager.ICON_TAREA,      PANEL_TAREA));
+        sidebar.add(navButton("Notas",              IconManager.ICON_NOTA,       PANEL_NOTA));
+        sidebar.add(navButton("Comandos",           IconManager.ICON_COMANDO,    PANEL_COMANDO));
 
         sidebar.add(Box.createVerticalGlue());
 
@@ -124,8 +187,11 @@ public class MainFrame extends JFrame {
         JLabel lbl = new JLabel(text);
         lbl.setFont(UIConstants.FONT_BODY);
         lbl.setForeground(UIConstants.TEXT_SECONDARY);
+        // Pasar eventos del label al panel para que toda el area sea clickeable
+        lbl.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) { navigateTo(btn, panelName); }
+        });
 
-        // Agregar icono PNG si existe
         ImageIcon icon = IconManager.getNavIcon(iconName);
         if (icon != null && icon.getIconWidth() > 1) {
             lbl.setIcon(icon);
@@ -134,13 +200,10 @@ public class MainFrame extends JFrame {
 
         btn.add(lbl, BorderLayout.CENTER);
 
+        // mousePressed en vez de mouseClicked — responde al primer toque sin
+        // esperar el release, elimina la sensación de lag en el sidebar
         btn.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                setNavActive(activeNavBtn, false);
-                setNavActive(btn, true);
-                activeNavBtn = btn;
-                cardLayout.show(contentPanel, panelName);
-            }
+            public void mousePressed(MouseEvent e) { navigateTo(btn, panelName); }
             public void mouseEntered(MouseEvent e) {
                 if (activeNavBtn != btn) btn.setBackground(UIConstants.BG_CARD);
             }
@@ -149,6 +212,14 @@ public class MainFrame extends JFrame {
             }
         });
         return btn;
+    }
+
+    private void navigateTo(JPanel btn, String panelName) {
+        if (activeNavBtn == btn) return; // ya estamos aqui, ignorar
+        setNavActive(activeNavBtn, false);
+        setNavActive(btn, true);
+        activeNavBtn = btn;
+        showPanel(panelName);
     }
 
     private void setNavActive(JPanel btn, boolean active) {
