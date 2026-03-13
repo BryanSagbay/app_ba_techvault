@@ -51,7 +51,7 @@ public class FilterBar extends JPanel {
         public String getValue() { return value; }
     }
 
-    // ── Combo filter (dropdown) ─────────────────────────────────
+    // Combo filter (dropdown) 
     public static class FilterCombo extends JPanel {
         private final JComboBox<String> combo;
         private final String allLabel;
@@ -90,7 +90,7 @@ public class FilterBar extends JPanel {
         public void reset() { combo.setSelectedIndex(0); }
     }
 
-    // ── Sort combo ──────────────────────────────────────────────
+    //  Sort combo
     public static class SortCombo extends JPanel {
         private final JComboBox<String> combo;
 
@@ -118,7 +118,7 @@ public class FilterBar extends JPanel {
         public void reset() { combo.setSelectedIndex(0); }
     }
 
-    // ── FilterBar container ─────────────────────────────────────
+    //  FilterBar container 
     private final List<FilterChip>  chips  = new ArrayList<>();
     private final List<FilterCombo> combos = new ArrayList<>();
     private SortCombo sortCombo;
@@ -243,7 +243,7 @@ public class FilterBar extends JPanel {
         notifyChange();
     }
 
-    // ── Getters para los paneles ────────────────────────────────
+    //  Getters para los paneles 
 
     /** Valores de chips seleccionados (ej: ["Alta","Media"]) */
     public List<String> getSelectedChips() {
