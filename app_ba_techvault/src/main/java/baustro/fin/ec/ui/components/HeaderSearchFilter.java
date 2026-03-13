@@ -33,7 +33,7 @@ public class HeaderSearchFilter extends JPanel {
         setOpaque(false);
         setLayout(new FlowLayout(FlowLayout.RIGHT, 6, 0));
 
-        // ── SearchBar con icono ──────────────────────────────────
+        //  SearchBar con icono
         JPanel searchWrap = new JPanel(new BorderLayout(0, 0));
         searchWrap.setBackground(UIConstants.BG_INPUT);
         searchWrap.setBorder(BorderFactory.createCompoundBorder(
@@ -93,7 +93,7 @@ public class HeaderSearchFilter extends JPanel {
         searchWrap.add(searchField, BorderLayout.CENTER);
         add(searchWrap);
 
-        // ── Separador visual ─────────────────────────────────────
+        //  Separador visual
         if (filters.length > 0) {
             JSeparator sep = new JSeparator(JSeparator.VERTICAL);
             sep.setForeground(UIConstants.BORDER);
@@ -101,7 +101,7 @@ public class HeaderSearchFilter extends JPanel {
             add(sep);
         }
 
-        // ── Combos de filtro inline ───────────────────────────────
+        //  Combos de filtro inline
         for (ComboConfig cfg : filters) {
             JLabel lbl = new JLabel(cfg.label() + ":");
             lbl.setFont(UIConstants.FONT_SMALL);
@@ -123,7 +123,7 @@ public class HeaderSearchFilter extends JPanel {
             add(combo);
         }
 
-        // ── Boton limpiar ────────────────────────────────────────
+        //  Boton limpiar
         if (filters.length > 0) {
             JButton btnClear = new JButton("x");
             btnClear.setFont(UIConstants.FONT_SMALL);
