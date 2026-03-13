@@ -47,7 +47,7 @@ public class ContrasenaPanel extends JPanel {
         showLock();
     }
 
-    // ── LOCK SCREEN ──────────────────────────────────────────────
+    //LOCK SCREEN
     private void buildLockScreen() {
         lockScreen = new JPanel(new GridBagLayout());
         lockScreen.setBackground(UIConstants.BG_DARK);
@@ -62,7 +62,7 @@ public class ContrasenaPanel extends JPanel {
         g.fill = GridBagConstraints.HORIZONTAL;
         g.insets = new Insets(8, 0, 8, 0);
 
-        // Icono
+        //Icono
         JLabel icoLbl = new JLabel();
         icoLbl.setHorizontalAlignment(SwingConstants.CENTER);
         ImageIcon lockIco = IconManager.getIcon(IconManager.ICON_LOCK, 52);
@@ -159,7 +159,7 @@ public class ContrasenaPanel extends JPanel {
     private void showLock() { ((CardLayout) getLayout()).show(this, "lock"); }
     private void showMain() { ((CardLayout) getLayout()).show(this, "main"); }
 
-    // ── MAIN CONTENT ─────────────────────────────────────────────
+    //MAIN CONTENT
     private void buildMainContent() {
         mainContent = new JPanel(new BorderLayout());
         mainContent.setBackground(UIConstants.BG_DARK);
