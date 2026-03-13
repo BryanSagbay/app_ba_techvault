@@ -34,7 +34,7 @@ public class TransaccionPanel extends JPanel {
     }
 
     private void buildUI() {
-        // ── HEADER con filtros ────────────────────────────────────
+        // HEADER con filtros
         JPanel header = new JPanel(new BorderLayout(10, 0));
         header.setBackground(UIConstants.BG_PANEL);
         header.setBorder(BorderFactory.createCompoundBorder(
@@ -59,7 +59,7 @@ public class TransaccionPanel extends JPanel {
         header.add(titlePane, BorderLayout.WEST);
         header.add(hsf, BorderLayout.EAST);
 
-        // ── STATS BAR ─────────────────────────────────────────────
+        // STATS BAR
         JPanel statsBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         statsBar.setBackground(new Color(20, 26, 38));
         statsBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER));
@@ -68,7 +68,7 @@ public class TransaccionPanel extends JPanel {
         statsLabel.setForeground(UIConstants.TEXT_MUTED);
         statsBar.add(statsLabel);
 
-        // ── TABLA ─────────────────────────────────────────────────
+        // TABLA
         String[] cols = {"#", "TRX", "Subsistema", "Subtransaccion", "Tipo", "Descripcion"};
         tableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
@@ -86,12 +86,12 @@ public class TransaccionPanel extends JPanel {
             public void mouseClicked(MouseEvent e) { if (e.getClickCount() == 2) editSelected(); }
         });
 
-        // ── CENTRO ────────────────────────────────────────────────
+        // CENTRO
         JPanel center = new JPanel(new BorderLayout());
         center.add(statsBar, BorderLayout.NORTH);
         center.add(StyledComponents.darkScrollPane(table), BorderLayout.CENTER);
 
-        // ── BOTTOM ────────────────────────────────────────────────
+        // BOTTOM
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
         bottom.setBackground(UIConstants.BG_DARK);
         JButton btnNew    = StyledComponents.addButton("Nueva Transaccion");
