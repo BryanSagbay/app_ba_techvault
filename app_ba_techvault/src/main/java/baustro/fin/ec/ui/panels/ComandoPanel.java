@@ -54,7 +54,7 @@ public class ComandoPanel extends JPanel {
                 "Buscar comando, descripción...",
                 new HeaderSearchFilter.ComboConfig("SO", UIConstants.SISTEMAS_OPERATIVOS_CMD, "Todos"),
                 new HeaderSearchFilter.ComboConfig("Categoría",new String[]{"Red","Logs","Deploy","BD","Sistema","Docker","Git","Otro"}, "Todas"),
-                new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"Titulo Z-A","Categoría","SO"}, "Titulo A-Z")
+                new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"Categoría","SO"}, "Titulo A-Z")
         ).onChanged(this::applyFilters);
 
         header.add(titlePane,BorderLayout.WEST);

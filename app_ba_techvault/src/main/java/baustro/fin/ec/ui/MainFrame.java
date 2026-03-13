@@ -174,12 +174,12 @@ public class MainFrame extends JFrame {
         sidebar.add(sectionLabel("GESTIÓN"));
         sidebar.add(navButton("Servidores", IconManager.ICON_SERVIDOR, PANEL_SERVIDOR));
         sidebar.add(navButton("Comandos", IconManager.ICON_COMANDO, PANEL_COMANDO));
-        sidebar.add(navButton("Transacciones", IconManager.ICON_COMANDO, PANEL_TRANSACCION));
+        sidebar.add(navButton("Transacciones", IconManager.ICON_TRX, PANEL_TRANSACCION));
 
         sidebar.add(sectionLabel("DOCUMENTACIÓN"));
         sidebar.add(navButton("Casos", IconManager.ICON_CORRECTIVO, PANEL_CASOS));
         sidebar.add(navButton("Manuales", IconManager.ICON_MANUAL, PANEL_MANUAL));
-        sidebar.add(navButton("Emergentes", IconManager.ICON_CORRECTIVO, PANEL_EMERGENTE));
+        sidebar.add(navButton("Emergentes", IconManager.ICON_AZURE, PANEL_EMERGENTE));
 
         sidebar.add(Box.createVerticalGlue());
 

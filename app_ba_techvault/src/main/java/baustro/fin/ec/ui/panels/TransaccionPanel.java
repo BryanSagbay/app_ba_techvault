@@ -46,14 +46,14 @@ public class TransaccionPanel extends JPanel {
         JLabel title = new JLabel("Transacciones");
         title.setFont(UIConstants.FONT_TITLE);
         title.setForeground(UIConstants.TEXT_PRIMARY);
-        ImageIcon ico = IconManager.getIcon(IconManager.ICON_COMANDO, 22);
+        ImageIcon ico = IconManager.getIcon(IconManager.ICON_TRX, 22);
         if (ico != null && ico.getIconWidth() > 1) { title.setIcon(ico); title.setIconTextGap(8); }
         titlePane.add(title);
 
         hsf = new HeaderSearchFilter(
                 "Buscar TRX, subsistema, descripcion...",
                 new HeaderSearchFilter.ComboConfig("Tipo",     TIPOS,                                                              "Todos"),
-                new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"TRX A-Z", "Subsistema", "Tipo", "Subtransaccion"},    "TRX A-Z")
+                new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"Subsistema", "Tipo", "Subtransaccion"},    "TRX A-Z")
         ).onChanged(this::applyFilters);
 
         header.add(titlePane, BorderLayout.WEST);

@@ -93,7 +93,7 @@ public class TareaPanel extends JPanel {
                         new String[]{"Hoy","Esta semana","Vencidas"},
                         "Cualquier fecha"),
                 new HeaderSearchFilter.ComboConfig("Ordenar",
-                        new String[]{"Prioridad Alta","Fecha limite","Estado","Titulo"},
+                        new String[]{"Fecha limite","Estado","Titulo"},
                         "Prioridad Alta")
         ).onChanged(this::applyFilters);
 

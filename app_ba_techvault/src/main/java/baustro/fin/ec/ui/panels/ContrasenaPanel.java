@@ -195,7 +195,7 @@ public class ContrasenaPanel extends JPanel {
         hsf = new HeaderSearchFilter(
                 "Buscar titulo, usuario, categoria...",
                 new HeaderSearchFilter.ComboConfig("Categoria", cats, "Todas"),
-                new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{"Titulo A-Z", "Categoria", "Titulo Z-A"}, "Titulo A-Z")
+                new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{"Titulo Z-A","Categoria"}, "Titulo A-Z")
         ).onChanged(this::applyFilters);
 
         header.add(titlePane, BorderLayout.WEST);

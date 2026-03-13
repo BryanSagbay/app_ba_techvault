@@ -90,7 +90,7 @@ public class CasoPanel extends JPanel {
                 new HeaderSearchFilter.ComboConfig("Prioridad", UIConstants.PRIORIDADES, "Todas"),
                 new HeaderSearchFilter.ComboConfig("Ambiente", UIConstants.AMBIENTES, "Todos"),
                 new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{
-                        "Fecha reciente","Fecha antigua","Prioridad Alta","Estado","N Tarea","Servicio"},
+                       "Fecha antigua","Prioridad Alta","Estado","N Tarea","Servicio"},
                         "Fecha reciente")
         ).onChanged(this::applyFilters);
 

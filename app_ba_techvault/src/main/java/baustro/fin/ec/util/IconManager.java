@@ -33,6 +33,8 @@ public class IconManager {
     public static final String ICON_SAVE = "save";
     public static final String ICON_CANCEL = "cancel";
     public static final String ICON_MANUAL = "manual";
+    public static final String ICON_TRX = "trx";
+    public static final String ICON_AZURE = "azure";
     //public static final String ICON_REFRESH = "refresh";
     //public static final String ICON_WARNING = "warning";
     //public static final String ICON_SUCCESS = "success";

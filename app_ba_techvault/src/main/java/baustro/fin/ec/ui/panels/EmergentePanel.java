@@ -47,14 +47,14 @@ public class EmergentePanel extends JPanel {
         JLabel title = new JLabel("Emergentes");
         title.setFont(UIConstants.FONT_TITLE);
         title.setForeground(UIConstants.TEXT_PRIMARY);
-        ImageIcon ico = IconManager.getIcon(IconManager.ICON_CORRECTIVO, 22);
+        ImageIcon ico = IconManager.getIcon(IconManager.ICON_AZURE, 22);
         if (ico != null && ico.getIconWidth() > 1) { title.setIcon(ico); title.setIconTextGap(8); }
         titlePane.add(title);
 
         hsf = new HeaderSearchFilter(
                 "Buscar numero, subsistema, descripcion...",
                 new HeaderSearchFilter.ComboConfig("Tipo",    TIPOS_EMERGENTE,                                         "Todos"),
-                new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{"Fecha reciente", "Fecha antigua",
+                new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{ "Fecha antigua",
                                                                "N Emergente", "Tipo", "Subsistema"},                   "Fecha reciente")
         ).onChanged(this::applyFilters);
 

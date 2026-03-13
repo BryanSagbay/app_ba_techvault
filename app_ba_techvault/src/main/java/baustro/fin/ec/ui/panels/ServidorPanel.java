@@ -54,7 +54,7 @@ public class ServidorPanel extends JPanel {
                 new HeaderSearchFilter.ComboConfig("Tipo",     UIConstants.TIPOS_SERVIDOR,   "Todos"),
 //                new HeaderSearchFilter.ComboConfig("Ambiente", UIConstants.AMBIENTES,         "Todos"),
 //                new HeaderSearchFilter.ComboConfig("Estado",   UIConstants.ESTADOS_SERVIDOR,  "Todos"),
-                  new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"Nombre A-Z","IP","Ambiente","Tipo"}, "Nombre A-Z")
+                  new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"IP","Ambiente","Tipo"}, "Nombre A-Z")
         ).onChanged(this::applyFilters);
 
         header.add(titlePane, BorderLayout.WEST);
