@@ -4,10 +4,9 @@ import java.awt.*;
 
 public final class UIConstants {
 
-    // COLOR PALETTE (Dark professional theme)
+    // COLOR PALETTE
     public static final Color BG_DARK       = new Color(28, 35, 49);
     public static final Color BG_PANEL      = new Color(36, 45, 61);
-    public static final Color BG_CARD       = new Color(44, 55, 74);
     public static final Color BG_INPUT      = new Color(52, 65, 86);
     public static final Color ACCENT_BLUE   = new Color(59, 130, 246);
     public static final Color ACCENT_GREEN  = new Color(34, 197, 94);
@@ -20,14 +19,40 @@ public final class UIConstants {
     public static final Color TEXT_MUTED    = new Color(100, 116, 139);
     public static final Color BORDER        = new Color(55, 68, 90);
     public static final Color TABLE_ROW_ALT = new Color(40, 50, 68);
+    // PALETTE
+    public static final Color BG_BASE        = new Color(0x0D0F14);
+    public static final Color BG_SURFACE     = new Color(0x13161E);
+    public static final Color BG_CARD        = new Color(0x181C26);
+    public static final Color BG_CARD_HOVER  = new Color(0x1E2330);
+    public static final Color BORDER_SUBTLE  = new Color(0x252A38);
+    public static final Color BORDER_ACTIVE  = new Color(0x2E3447);
 
-    // FONTS
+    public static final Color TEAL_PRIMARY   = new Color(0x00D2C8);
+    public static final Color INDIGO         = new Color(0x6C6FFF);
+    public static final Color AMBER          = new Color(0xF5A623);
+    public static final Color ROSE           = new Color(0xFF4F6D);
+    public static final Color EMERALD        = new Color(0x00C87A);
+    public static final Color VIOLET         = new Color(0xA855F7);
+    public static final Color SKY            = new Color(0x38BDF8);
+
+    public static final Color TEXT_BRIGHT    = new Color(0xF1F3F9);
+    public static final Color TEXT_MID       = new Color(0x8891A8);
+    public static final Color TEXT_DIM       = new Color(0x4D566B);
+
+    //  FONTS
+    public static final Font FONT_HERO       = new Font("Segoe UI", Font.BOLD, 38);
+    public static final Font FONT_SECTION    = new Font("Segoe UI", Font.BOLD, 11);
+    public static final Font FONT_CARD_TITLE = new Font("Segoe UI", Font.PLAIN, 13);
+    public static final Font FONT_CARD_SUB   = new Font("Segoe UI", Font.PLAIN, 11);
+    public static final Font FONT_HEADER     = new Font("Segoe UI", Font.BOLD, 18);
+    public static final Font FONT_BTN        = new Font("Segoe UI", Font.BOLD, 11);
+    public static final Font FONT_PILL       = new Font("Segoe UI", Font.BOLD, 9);
+    public static final Font FONT_META       = new Font("Segoe UI", Font.PLAIN, 11);
     public static final Font FONT_TITLE   = new Font("Segoe UI", Font.BOLD, 20);
     public static final Font FONT_HEADING = new Font("Segoe UI", Font.BOLD, 14);
     public static final Font FONT_BODY    = new Font("Segoe UI", Font.PLAIN, 13);
     public static final Font FONT_SMALL   = new Font("Segoe UI", Font.PLAIN, 11);
     public static final Font FONT_MONO    = new Font("Consolas", Font.PLAIN, 12);
-    //public static final Font FONT_MONO_SM = new Font("Consolas", Font.PLAIN, 11);
 
     // PRIORIDADES
     public static final String[] PRIORIDADES = {"Alta", "Media", "Baja"};
