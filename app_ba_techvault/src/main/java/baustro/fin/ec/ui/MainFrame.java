@@ -1,5 +1,6 @@
 package baustro.fin.ec.ui;
 
+import baustro.fin.ec.security.EncryptionUtil;
 import baustro.fin.ec.ui.panels.*;
 import baustro.fin.ec.util.IconManager;
 
@@ -7,6 +8,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +33,8 @@ public class MainFrame extends JFrame {
     private static final String PANEL_COMANDO  = "comandos";
     private static final String PANEL_CASOS = "casos";
     private static final String PANEL_MANUAL = "manual";
+    private static final String PANEL_TRANSACCION = "transacciones";
+    private static final String PANEL_EMERGENTE   = "emergentes";
 
 
     public MainFrame() {
@@ -63,6 +71,12 @@ public class MainFrame extends JFrame {
      * SwingWorker para no bloquear el EDT durante la consulta inicial a SQLite.
      */
     private void showPanel(String panelName) {
+        // Contrasenas: destruir y recrear siempre para forzar el lock screen
+        if (PANEL_PASSWORD.equals(panelName) && loadedPanels.containsKey(panelName)) {
+            JPanel old = loadedPanels.remove(panelName);
+            contentPanel.remove(old);
+        }
+
         if (loadedPanels.containsKey(panelName)) {
             cardLayout.show(contentPanel, panelName);
             return;
@@ -109,6 +123,8 @@ public class MainFrame extends JFrame {
             case PANEL_COMANDO    -> new ComandoPanel();
             case PANEL_CASOS -> new CasoPanel();
             case PANEL_MANUAL -> new ManualPanel();
+            case PANEL_TRANSACCION -> new TransaccionPanel();
+            case PANEL_EMERGENTE   -> new EmergentePanel();
             default               -> new JPanel();
         };
     }
@@ -158,10 +174,12 @@ public class MainFrame extends JFrame {
         sidebar.add(sectionLabel("GESTIÓN"));
         sidebar.add(navButton("Servidores", IconManager.ICON_SERVIDOR, PANEL_SERVIDOR));
         sidebar.add(navButton("Comandos", IconManager.ICON_COMANDO, PANEL_COMANDO));
+        sidebar.add(navButton("Transacciones", IconManager.ICON_COMANDO, PANEL_TRANSACCION));
 
         sidebar.add(sectionLabel("DOCUMENTACIÓN"));
         sidebar.add(navButton("Casos", IconManager.ICON_CORRECTIVO, PANEL_CASOS));
         sidebar.add(navButton("Manuales", IconManager.ICON_MANUAL, PANEL_MANUAL));
+        sidebar.add(navButton("Emergentes", IconManager.ICON_CORRECTIVO, PANEL_EMERGENTE));
 
         sidebar.add(Box.createVerticalGlue());
 
@@ -169,6 +187,9 @@ public class MainFrame extends JFrame {
         sidebar.add(bottomInfo);
 
         return sidebar;
+    }
+
+    private void setNavActive(JPanel btnDash, boolean b) {
     }
 
     private JPanel getJPanel() {
@@ -229,23 +250,6 @@ public class MainFrame extends JFrame {
         showPanel(panelName);
     }
 
-    private void setNavActive(JPanel btn, boolean active) {
-        if (btn == null) return;
-        btn.setBackground(active ? UIConstants.BG_INPUT : UIConstants.BG_PANEL);
-        if (active) {
-            btn.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 3, 0, 0, UIConstants.ACCENT_BLUE),
-                    BorderFactory.createEmptyBorder(11, 15, 11, 18)));
-        } else {
-            btn.setBorder(BorderFactory.createEmptyBorder(11, 18, 11, 18));
-        }
-        for (Component c : btn.getComponents()) {
-            if (c instanceof JLabel lbl) {
-                lbl.setForeground(active ? UIConstants.TEXT_PRIMARY : UIConstants.TEXT_SECONDARY);
-                lbl.setFont(active ? UIConstants.FONT_BODY.deriveFont(Font.BOLD) : UIConstants.FONT_BODY);
-            }
-        }
-    }
 
     private JPanel sectionLabel(String text) {
         JPanel p = new JPanel(new BorderLayout());

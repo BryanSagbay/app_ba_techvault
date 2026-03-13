@@ -70,7 +70,7 @@ public class NotaPanel extends JPanel {
         JLabel searchIco = new JLabel();
         searchIco.setOpaque(true); searchIco.setBackground(UIConstants.BG_INPUT);
         searchIco.setBorder(BorderFactory.createEmptyBorder(0,8,0,4));
-        ImageIcon _sico = baustro.fin.ec.util.IconManager.getSmallIcon(baustro.fin.ec.util.IconManager.ICON_SEARCH);
+        ImageIcon _sico = IconManager.getSmallIcon(IconManager.ICON_SEARCH);
         if(_sico!=null&&_sico.getIconWidth()>1) searchIco.setIcon(_sico);
         else { searchIco.setText("Q"); searchIco.setFont(UIConstants.FONT_SMALL); searchIco.setForeground(UIConstants.TEXT_MUTED); }
         searchField = new JTextField();

@@ -166,6 +166,31 @@ public class DatabaseManager {
                 categoria TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+            """,
+            // TRANSACCIONES
+            """
+            CREATE TABLE IF NOT EXISTS transacciones (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trx TEXT NOT NULL,
+                subsistema TEXT,
+                subtransaccion TEXT,
+                descripcion TEXT,
+                tipo TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
+            // EMERGENTES
+            """
+            CREATE TABLE IF NOT EXISTS emergentes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                numero_emergente TEXT NOT NULL,
+                fecha TEXT,
+                tipo TEXT,
+                descripcion TEXT,
+                subsistema TEXT,
+                transacciones TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
             """
         };
 

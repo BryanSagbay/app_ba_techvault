@@ -1,33 +1,41 @@
 package baustro.fin.ec;
 
+import baustro.fin.ec.ui.LoginDialog;
 import baustro.fin.ec.ui.MainFrame;
 import com.formdev.flatlaf.FlatDarkLaf;
+
 import javax.swing.*;
+import java.awt.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        // Look & Feel - FlatLaf Dark (si disponible) como base
         try {
             FlatDarkLaf.setup();
         } catch (Exception e) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ex) {
-                // usar default
-            }
+            try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
+            catch (Exception ignored) {}
         }
 
-        // Ajustes globales de UI
-        UIManager.put("OptionPane.background",          new java.awt.Color(36, 45, 61));
-        UIManager.put("Panel.background",               new java.awt.Color(36, 45, 61));
-        UIManager.put("OptionPane.messageForeground",   new java.awt.Color(241, 245, 249));
-        UIManager.put("Button.arc",                     8);
-        UIManager.put("Component.arc",                  6);
-        UIManager.put("TextComponent.arc",              6);
+        UIManager.put("OptionPane.background",        new Color(36, 45, 61));
+        UIManager.put("Panel.background",             new Color(36, 45, 61));
+        UIManager.put("OptionPane.messageForeground", new Color(241, 245, 249));
+        UIManager.put("Button.arc",  8);
+        UIManager.put("Component.arc", 6);
+        UIManager.put("TextComponent.arc", 6);
 
-        // Lanzar en EDT
         SwingUtilities.invokeLater(() -> {
+            // 1. Mostrar login — SIEMPRE al abrir la app
+            LoginDialog login = new LoginDialog();
+            login.setVisible(true);
+
+            // 2. Si no se autentico -> salir
+            if (!login.isAuthenticated()) {
+                System.exit(0);
+                return;
+            }
+
+            // 3. Abrir ventana principal
             MainFrame frame = new MainFrame();
             frame.setVisible(true);
         });
