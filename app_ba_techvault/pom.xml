@@ -62,7 +62,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.techops.App</mainClass>
+                            <mainClass>baustro.fin.ec.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
