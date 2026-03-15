@@ -30,14 +30,14 @@ public class ComandoPanel extends JPanel {
 
     public ComandoPanel() {
         setLayout(new BorderLayout());
-        setBackground(UIConstants.BG_DARK);
+        setBackground(UIConstants.BG_BASE);
         buildUI();
         loadData();
     }
 
     private void buildUI() {
         JPanel header = new JPanel(new BorderLayout(10,0));
-        header.setBackground(UIConstants.BG_PANEL);
+        header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0,0,1,0,UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(10,20,10,16)));
@@ -61,12 +61,12 @@ public class ComandoPanel extends JPanel {
         header.add(hsf,BorderLayout.EAST);
 
         JPanel statsBar=new JPanel(new FlowLayout(FlowLayout.LEFT,6,4));
-        statsBar.setBackground(new Color(20,26,38));
+        statsBar.setBackground(UIConstants.BG_SURFACE);
         statsBar.setBorder(BorderFactory.createMatteBorder(0,0,1,0,UIConstants.BORDER));
         statsLabel=new JLabel();statsLabel.setFont(UIConstants.FONT_SMALL);statsLabel.setForeground(UIConstants.TEXT_MUTED);
         statsBar.add(statsLabel);
 
-        String[] cols={"#","Titulo","Categoria","SO","Descripcion"};
+        String[] cols={"#","Titulo","Categoría","SO","Descripción"};
         tableModel=new DefaultTableModel(cols,0){public boolean isCellEditable(int r,int c){return false;}};
         table=new JTable(tableModel);StyledComponents.styleTable(table);
         table.getColumnModel().getColumn(0).setMaxWidth(40);
@@ -80,7 +80,7 @@ public class ComandoPanel extends JPanel {
 
         // Preview terminal
         JPanel previewPanel=new JPanel(new BorderLayout());
-        previewPanel.setBackground(UIConstants.BG_DARK);
+        previewPanel.setBackground(UIConstants.BG_BASE);
         JPanel previewHeader=new JPanel(new BorderLayout(8,0));
         previewHeader.setBackground(UIConstants.BG_CARD);
         previewHeader.setBorder(BorderFactory.createEmptyBorder(6,12,6,12));
@@ -89,13 +89,13 @@ public class ComandoPanel extends JPanel {
         btnCopy.addActionListener(e->copyCommand());
         previewHeader.add(pLbl,BorderLayout.WEST);previewHeader.add(btnCopy,BorderLayout.EAST);
         previewArea=StyledComponents.monoTextArea(4,40);
-        previewArea.setEditable(false);previewArea.setBackground(new Color(12,16,24));
+        previewArea.setEditable(false);previewArea.setBackground(UIConstants.BG_SURFACE);
         previewArea.setForeground(new Color(80,220,120));previewArea.setBorder(BorderFactory.createEmptyBorder(12,14,12,14));
         previewPanel.add(previewHeader,BorderLayout.NORTH);
         previewPanel.add(StyledComponents.darkScrollPane(previewArea),BorderLayout.CENTER);
 
         JSplitPane split=new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        split.setDividerLocation(300);split.setDividerSize(4);split.setBackground(UIConstants.BG_DARK);
+        split.setDividerLocation(300);split.setDividerSize(4);split.setBackground(UIConstants.BG_BASE);
 
         JPanel topArea=new JPanel(new BorderLayout());
         topArea.add(statsBar,BorderLayout.NORTH);
@@ -105,7 +105,7 @@ public class ComandoPanel extends JPanel {
         split.setBottomComponent(previewPanel);
 
         JPanel bottom=new JPanel(new FlowLayout(FlowLayout.LEFT,8,8));
-        bottom.setBackground(UIConstants.BG_DARK);
+        bottom.setBackground(UIConstants.BG_BASE);
         JButton btnNew=StyledComponents.addButton("Agregar");
         btnNew.addActionListener(e->openForm(null));
         JButton btnEdit=StyledComponents.editButton("Editar");
@@ -130,7 +130,7 @@ public class ComandoPanel extends JPanel {
         if(!so.isEmpty()) s=s.filter(c->so.equals(c.getSistemaOperativo())||"Ambos".equals(c.getSistemaOperativo()));
         if(!cat.isEmpty())s=s.filter(c->cat.equals(c.getCategoria()));
         Comparator<Comando> cmp=switch(sort){
-            case "Categoria"->Comparator.comparing(c->nvl(c.getCategoria()));
+            case "Categoría"->Comparator.comparing(c->nvl(c.getCategoria()));
             case "SO"       ->Comparator.comparing(c->nvl(c.getSistemaOperativo()));
             default         ->Comparator.comparing(c->nvl(c.getTitulo()));
         };
@@ -171,22 +171,22 @@ public class ComandoPanel extends JPanel {
 
     private void openForm(Comando existing){
         JDialog d=new JDialog((Frame)SwingUtilities.getWindowAncestor(this),existing==null?"Agregar Comando":"Editar Comando",true);
-        d.setSize(560,430);d.setLocationRelativeTo(this);d.getContentPane().setBackground(UIConstants.BG_PANEL);d.setLayout(new BorderLayout());
-        JPanel form=new JPanel(new GridBagLayout());form.setBackground(UIConstants.BG_PANEL);form.setBorder(BorderFactory.createEmptyBorder(20,24,10,24));
+        d.setSize(560,430);d.setLocationRelativeTo(this);d.getContentPane().setBackground(UIConstants.BG_CARD);d.setLayout(new BorderLayout());
+        JPanel form=new JPanel(new GridBagLayout());form.setBackground(UIConstants.BG_CARD);form.setBorder(BorderFactory.createEmptyBorder(20,24,10,24));
         GridBagConstraints gbc=new GridBagConstraints();gbc.fill=GridBagConstraints.HORIZONTAL;gbc.insets=new Insets(6,6,6,6);
         JTextField fTit=StyledComponents.styledTextField("Nombre descriptivo");
         JTextField fCat=StyledComponents.styledTextField("Red, Logs, Deploy, BD...");
         JComboBox<String> fSO=StyledComponents.styledCombo(UIConstants.SISTEMAS_OPERATIVOS_CMD);
         JTextArea fCmd=StyledComponents.monoTextArea(5,40);
-        fCmd.setBackground(new Color(12,16,24));fCmd.setForeground(new Color(80,220,120));
+        fCmd.setBackground(UIConstants.BG_SURFACE);fCmd.setForeground(new Color(80,220,120));
         JTextArea fDesc=StyledComponents.styledTextArea(3,40);
         if(existing!=null){fTit.setText(existing.getTitulo());fCat.setText(existing.getCategoria());sc(fSO,existing.getSistemaOperativo());fCmd.setText(existing.getComando());fDesc.setText(existing.getDescripcion());}
         int r=0;
-        ar(form,gbc,r++,"Titulo *",fTit,"Categoria",fCat);
+        ar(form,gbc,r++,"Titulo *",fTit,"Categoría",fCat);
         ar(form,gbc,r++,"Sistema Operativo",fSO,null,null);
         af(form,gbc,r++,"Comando *",new JScrollPane(fCmd));
-        af(form,gbc,r,"Descripcion / Uso",new JScrollPane(fDesc));
-        JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,10));bp.setBackground(UIConstants.BG_DARK);
+        af(form,gbc,r,"Descripción / Uso",new JScrollPane(fDesc));
+        JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,10));bp.setBackground(UIConstants.BG_BASE);
         JButton bS=StyledComponents.successButton("Guardar");JButton bC=StyledComponents.cancelButton("Cancelar");
         bC.addActionListener(e->d.dispose());
         bS.addActionListener(e->{
@@ -196,7 +196,7 @@ public class ComandoPanel extends JPanel {
             try{if(existing==null)dao.insert(c);else dao.update(c);loadData();d.dispose();}catch(Exception ex){JOptionPane.showMessageDialog(d,"Error: "+ex.getMessage());}
         });
         bp.add(bS);bp.add(bC);
-        JScrollPane sp=new JScrollPane(form);sp.getViewport().setBackground(UIConstants.BG_PANEL);sp.setBorder(null);
+        JScrollPane sp=new JScrollPane(form);sp.getViewport().setBackground(UIConstants.BG_CARD);sp.setBorder(null);
         d.add(sp,BorderLayout.CENTER);d.add(bp,BorderLayout.SOUTH);d.setVisible(true);
     }
     private void ar(JPanel p,GridBagConstraints g,int row,String l1,Component c1,String l2,Component c2){

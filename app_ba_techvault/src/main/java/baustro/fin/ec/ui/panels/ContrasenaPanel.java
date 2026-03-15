@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -33,14 +34,9 @@ public class ContrasenaPanel extends JPanel {
     private JLabel statsLabel;
     private List<Contrasena> allData = new ArrayList<>();
 
-    // Lock de modulo — pide clave al entrar
-    private JPanel lockScreen;
-    private JPanel mainContent;
-    private boolean unlocked = false;
-
     public ContrasenaPanel() {
         setLayout(new CardLayout());
-        setBackground(UIConstants.BG_DARK);
+        setBackground(UIConstants.BG_BASE);
         buildLockScreen();
         buildMainContent();
         // Mostrar lock screen al iniciar
@@ -49,11 +45,12 @@ public class ContrasenaPanel extends JPanel {
 
     //LOCK SCREEN
     private void buildLockScreen() {
-        lockScreen = new JPanel(new GridBagLayout());
-        lockScreen.setBackground(UIConstants.BG_DARK);
+        // Lock de módulo — pide clave al entrar
+        JPanel lockScreen = new JPanel(new GridBagLayout());
+        lockScreen.setBackground(UIConstants.BG_BASE);
 
         JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(UIConstants.BG_PANEL);
+        card.setBackground(UIConstants.BG_CARD);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(40, 50, 40, 50)));
@@ -69,14 +66,14 @@ public class ContrasenaPanel extends JPanel {
         if (lockIco != null && lockIco.getIconWidth() > 1) icoLbl.setIcon(lockIco);
         else { icoLbl.setText("[LOCK]"); icoLbl.setFont(UIConstants.FONT_TITLE); icoLbl.setForeground(UIConstants.ACCENT_BLUE); }
 
-        JLabel title = new JLabel("Gestor de Contrasenas", SwingConstants.CENTER);
+        JLabel title = new JLabel("Gestor de Contraseñas", SwingConstants.CENTER);
         title.setFont(UIConstants.FONT_TITLE); title.setForeground(UIConstants.TEXT_PRIMARY);
 
         JLabel sub = new JLabel("Ingresa tu contrasena maestra para acceder", SwingConstants.CENTER);
         sub.setFont(UIConstants.FONT_BODY); sub.setForeground(UIConstants.TEXT_MUTED);
 
         JPasswordField pwField = new JPasswordField();
-        pwField.setBackground(UIConstants.BG_INPUT); pwField.setForeground(UIConstants.TEXT_PRIMARY);
+        pwField.setBackground(UIConstants.BG_SURFACE); pwField.setForeground(UIConstants.TEXT_PRIMARY);
         pwField.setCaretColor(UIConstants.TEXT_PRIMARY); pwField.setFont(UIConstants.FONT_BODY);
         pwField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER),
@@ -98,11 +95,10 @@ public class ContrasenaPanel extends JPanel {
             if (pw.isEmpty()) { errLbl.setText("Ingresa tu contrasena."); return; }
             // Verificar contra el hash guardado
             if (checkHash(pw)) {
-                // Asegurar que EncryptionUtil tiene la clave (por si el login global ya la tenia)
+                // Asegurar que EncryptionUtil tiene la clave
                 if (!EncryptionUtil.hasMasterPassword()) {
                     EncryptionUtil.setMasterPassword(pw);
                 }
-                unlocked = true;
                 showMain();
                 loadData();
             } else {
@@ -151,7 +147,7 @@ public class ContrasenaPanel extends JPanel {
             }
             String stored = Files.readString(Path.of(hashFile)).trim();
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(password.getBytes("UTF-8"));
+            byte[] hash = md.digest(password.getBytes(StandardCharsets.UTF_8));
             return stored.equals(Base64.getEncoder().encodeToString(hash));
         } catch (Exception e) { return false; }
     }
@@ -161,41 +157,38 @@ public class ContrasenaPanel extends JPanel {
 
     //MAIN CONTENT
     private void buildMainContent() {
-        mainContent = new JPanel(new BorderLayout());
-        mainContent.setBackground(UIConstants.BG_DARK);
+        JPanel mainContent = new JPanel(new BorderLayout());
+        mainContent.setBackground(UIConstants.BG_BASE);
 
         // Header
         JPanel header = new JPanel(new BorderLayout(10, 0));
-        header.setBackground(UIConstants.BG_PANEL);
+        header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(10, 20, 10, 16)));
 
         JPanel titlePane = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         titlePane.setOpaque(false);
-        JLabel title = new JLabel("Gestor de Contrasenas");
+        JLabel title = new JLabel("Gestor de Contraseñas");
         title.setFont(UIConstants.FONT_TITLE); title.setForeground(UIConstants.TEXT_PRIMARY);
-        ImageIcon ico = IconManager.getIcon(IconManager.ICON_PASSWORD, 22);
+        ImageIcon ico = IconManager.getIcon(IconManager.ICON_UNLOCK, 22);
         if (ico != null && ico.getIconWidth() > 1) { title.setIcon(ico); title.setIconTextGap(8); }
-
-        JButton btnNew    = StyledComponents.addButton("Nueva");
         JButton btnLock   = new JButton("Bloquear");
         btnLock.setBackground(UIConstants.BG_CARD); btnLock.setForeground(UIConstants.TEXT_MUTED);
         btnLock.setFont(UIConstants.FONT_SMALL); btnLock.setFocusPainted(false);
         btnLock.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER),
-                BorderFactory.createEmptyBorder(4, 12, 4, 12)));
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
         btnLock.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnLock.addActionListener(e -> { unlocked = false; showLock(); });
-        btnNew.addActionListener(e -> openForm(null));
+        btnLock.addActionListener(e -> showLock());
 
-        titlePane.add(title); titlePane.add(btnNew); titlePane.add(btnLock);
+        titlePane.add(title); titlePane.add(btnLock);
 
         String[] cats = {"BD", "Servidor", "App", "VPN", "Email", "API", "Web", "Sistema"};
         hsf = new HeaderSearchFilter(
-                "Buscar titulo, usuario, categoria...",
-                new HeaderSearchFilter.ComboConfig("Categoria", cats, "Todas"),
-                new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{"Titulo Z-A","Categoria"}, "Titulo A-Z")
+                "Buscar titulo, usuario, categoría...",
+                new HeaderSearchFilter.ComboConfig("Categoría", cats, "Todas"),
+                new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{"Titulo Z-A","Categoría"}, "Titulo A-Z")
         ).onChanged(this::applyFilters);
 
         header.add(titlePane, BorderLayout.WEST);
@@ -203,14 +196,14 @@ public class ContrasenaPanel extends JPanel {
 
         // Stats bar
         JPanel statsBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        statsBar.setBackground(new Color(20, 26, 38));
+        statsBar.setBackground(UIConstants.BG_SURFACE);
         statsBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER));
         statsLabel = new JLabel();
         statsLabel.setFont(UIConstants.FONT_SMALL); statsLabel.setForeground(UIConstants.TEXT_MUTED);
         statsBar.add(statsLabel);
 
         // Table
-        String[] cols = {"#", "Titulo", "Usuario", "Categoria", "URL"};
+        String[] cols = {"#", "Titulo", "Usuario", "Categoría", "URL"};
         tableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -221,11 +214,11 @@ public class ContrasenaPanel extends JPanel {
         table.getColumnModel().getColumn(2).setPreferredWidth(160);
         table.getColumnModel().getColumn(3).setPreferredWidth(100);
         table.getColumnModel().getColumn(4).setPreferredWidth(200);
-        // Categoria coloreada
+        // Categoría coloreada
         table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
             public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean focus, int row, int col) {
                 super.getTableCellRendererComponent(t, val, sel, focus, row, col);
-                setBackground(sel ? UIConstants.ACCENT_BLUE : (row % 2 == 0 ? UIConstants.BG_PANEL : UIConstants.TABLE_ROW_ALT));
+                setBackground(sel ? UIConstants.ACCENT_BLUE : (row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER));
                 setForeground(UIConstants.ACCENT_CYAN);
                 setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD));
                 setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
@@ -237,8 +230,10 @@ public class ContrasenaPanel extends JPanel {
         });
 
         // Bottom bar
+        JButton btnNew    = StyledComponents.addButton("Nueva");
+        btnNew.addActionListener(e -> openForm(null));
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-        bottom.setBackground(UIConstants.BG_DARK);
+        bottom.setBackground(UIConstants.BG_BASE);
         JButton btnEdit     = StyledComponents.editButton("Editar");
         JButton btnDelete   = StyledComponents.dangerButton("Eliminar");
         JButton btnCopyPass = StyledComponents.copyButton("Copiar Contrasena");
@@ -247,7 +242,7 @@ public class ContrasenaPanel extends JPanel {
         btnDelete.addActionListener(e -> deleteSelected());
         btnCopyPass.addActionListener(e -> copyField("pass"));
         btnCopyUser.addActionListener(e -> copyField("user"));
-        bottom.add(btnEdit); bottom.add(btnDelete); bottom.add(btnCopyPass); bottom.add(btnCopyUser);
+        bottom.add(btnNew); bottom.add(btnEdit); bottom.add(btnDelete); bottom.add(btnCopyPass); bottom.add(btnCopyUser);
 
         JPanel center = new JPanel(new BorderLayout());
         center.add(statsBar, BorderLayout.NORTH);
@@ -272,7 +267,7 @@ public class ContrasenaPanel extends JPanel {
         if (!q.isEmpty())   s = s.filter(c -> nv(c.getTitulo(), q) || nv(c.getUsuario(), q) || nv(c.getCategoria(), q));
         if (!cat.isEmpty()) s = s.filter(c -> cat.equals(c.getCategoria()));
         Comparator<Contrasena> cmp = switch (sort) {
-            case "Categoria"  -> Comparator.comparing(c -> nvl(c.getCategoria()));
+            case "Categoría"  -> Comparator.comparing(c -> nvl(c.getCategoria()));
             case "Titulo Z-A" -> Comparator.comparing((Contrasena c) -> nvl(c.getTitulo())).reversed();
             default           -> Comparator.comparing(c -> nvl(c.getTitulo()));
         };
@@ -335,7 +330,7 @@ public class ContrasenaPanel extends JPanel {
         // Verificar clave maestra ANTES de abrir el formulario
         if (!EncryptionUtil.hasMasterPassword()) {
             JOptionPane.showMessageDialog(this,
-                    "No se puede guardar: la clave maestra no esta configurada.\nCierra y vuelve a abrir la sesion.",
+                    "No se puede guardar: la clave maestra no esta configurada.\nCierra y vuelve a abrir la sesión.",
                     "Error de seguridad", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -343,11 +338,11 @@ public class ContrasenaPanel extends JPanel {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 existing == null ? "Nueva Contrasena" : "Editar Contrasena", true);
         d.setSize(480, 430); d.setLocationRelativeTo(this);
-        d.getContentPane().setBackground(UIConstants.BG_PANEL);
+        d.getContentPane().setBackground(UIConstants.BG_CARD);
         d.setLayout(new BorderLayout());
 
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(UIConstants.BG_PANEL);
+        form.setBackground(UIConstants.BG_CARD);
         form.setBorder(BorderFactory.createEmptyBorder(20, 24, 10, 24));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(6, 6, 6, 6); gbc.weightx = 1;
@@ -361,7 +356,7 @@ public class ContrasenaPanel extends JPanel {
 
         JCheckBox showPw = new JCheckBox("Mostrar contrasena");
         showPw.setForeground(UIConstants.TEXT_SECONDARY);
-        showPw.setBackground(UIConstants.BG_PANEL);
+        showPw.setBackground(UIConstants.BG_CARD);
         showPw.setFont(UIConstants.FONT_SMALL);
         showPw.addItemListener(e -> fPass.setEchoChar(showPw.isSelected() ? (char) 0 : '*'));
 
@@ -381,11 +376,11 @@ public class ContrasenaPanel extends JPanel {
         row2(form, gbc, r++, "Contrasena *", fPass);
         gbc.gridy = r++ * 2; gbc.gridx = 0; gbc.gridwidth = 2; form.add(showPw, gbc);
         row2(form, gbc, r++, "URL / Sistema", fUrl);
-        row2(form, gbc, r++, "Categoria", fCat);
+        row2(form, gbc, r++, "Categoría", fCat);
         row2(form, gbc, r, "Notas", new JScrollPane(fNotas));
 
         JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
-        bp.setBackground(UIConstants.BG_DARK);
+        bp.setBackground(UIConstants.BG_BASE);
         JButton bS = StyledComponents.successButton("Guardar");
         JButton bC = StyledComponents.cancelButton("Cancelar");
         bC.addActionListener(e -> d.dispose());
@@ -418,7 +413,7 @@ public class ContrasenaPanel extends JPanel {
 
         bp.add(bS); bp.add(bC);
         JScrollPane sp = new JScrollPane(form);
-        sp.getViewport().setBackground(UIConstants.BG_PANEL); sp.setBorder(null);
+        sp.getViewport().setBackground(UIConstants.BG_CARD); sp.setBorder(null);
         d.add(sp, BorderLayout.CENTER); d.add(bp, BorderLayout.SOUTH);
         d.setVisible(true);
     }
@@ -430,4 +425,5 @@ public class ContrasenaPanel extends JPanel {
         p.add(l, g);
         g.gridy = row * 2 + 1; p.add(c, g);
     }
+
 }

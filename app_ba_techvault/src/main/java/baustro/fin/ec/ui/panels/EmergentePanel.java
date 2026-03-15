@@ -29,7 +29,7 @@ public class EmergentePanel extends JPanel {
 
     public EmergentePanel() {
         setLayout(new BorderLayout());
-        setBackground(UIConstants.BG_DARK);
+        setBackground(UIConstants.BG_BASE);
         buildUI();
         loadData();
     }
@@ -37,7 +37,7 @@ public class EmergentePanel extends JPanel {
     private void buildUI() {
         // HEADER con filtros
         JPanel header = new JPanel(new BorderLayout(10, 0));
-        header.setBackground(UIConstants.BG_PANEL);
+        header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(10, 20, 10, 16)));
@@ -63,7 +63,7 @@ public class EmergentePanel extends JPanel {
 
         // STATS BAR
         JPanel statsBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        statsBar.setBackground(new Color(20, 26, 38));
+        statsBar.setBackground(UIConstants.BG_SURFACE);
         statsBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER));
         statsLabel = new JLabel("Cargando...");
         statsLabel.setFont(UIConstants.FONT_SMALL);
@@ -96,7 +96,7 @@ public class EmergentePanel extends JPanel {
 
         // BOTTOM
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-        bottom.setBackground(UIConstants.BG_DARK);
+        bottom.setBackground(UIConstants.BG_BASE);
         JButton btnNew    = StyledComponents.addButton("Nuevo Emergente");
         JButton btnEdit   = StyledComponents.editButton("Editar");
         JButton btnDelete = StyledComponents.dangerButton("Eliminar");
@@ -117,7 +117,7 @@ public class EmergentePanel extends JPanel {
             public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean focus, int row, int col) {
                 super.getTableCellRendererComponent(t, val, sel, focus, row, col);
                 String s = val != null ? val.toString() : "";
-                setBackground(sel ? UIConstants.ACCENT_BLUE : (row % 2 == 0 ? UIConstants.BG_PANEL : UIConstants.TABLE_ROW_ALT));
+                setBackground(sel ? UIConstants.ACCENT_BLUE : (row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER));
                 setForeground(switch (s) {
                     case "Critico"     -> UIConstants.ACCENT_RED;
                     case "Urgente"     -> UIConstants.ACCENT_ORANGE;
@@ -197,10 +197,10 @@ public class EmergentePanel extends JPanel {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 "Detalle: " + e.getNumeroEmergente(), true);
         d.setSize(620, 460); d.setLocationRelativeTo(this);
-        d.getContentPane().setBackground(UIConstants.BG_PANEL);
+        d.getContentPane().setBackground(UIConstants.BG_CARD);
         JTextArea ta = StyledComponents.monoTextArea(10, 60);
         ta.setEditable(false);
-        ta.setBackground(UIConstants.BG_DARK);
+        ta.setBackground(UIConstants.BG_BASE);
         ta.setForeground(UIConstants.TEXT_PRIMARY);
         ta.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         String sep = "=".repeat(54) + "\n";
@@ -220,11 +220,11 @@ public class EmergentePanel extends JPanel {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 existing == null ? "Nuevo Emergente" : "Editar Emergente", true);
         d.setSize(600, 460); d.setLocationRelativeTo(this);
-        d.getContentPane().setBackground(UIConstants.BG_PANEL);
+        d.getContentPane().setBackground(UIConstants.BG_CARD);
         d.setLayout(new BorderLayout());
 
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(UIConstants.BG_PANEL);
+        form.setBackground(UIConstants.BG_CARD);
         form.setBorder(BorderFactory.createEmptyBorder(22, 28, 12, 28));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(6, 6, 6, 6);
@@ -254,7 +254,7 @@ public class EmergentePanel extends JPanel {
         af(form, gbc, r,   "Descripcion",   new JScrollPane(fDesc));
 
         JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
-        bp.setBackground(UIConstants.BG_DARK);
+        bp.setBackground(UIConstants.BG_BASE);
         JButton bS = StyledComponents.successButton("Guardar");
         JButton bC = StyledComponents.cancelButton("Cancelar");
         bC.addActionListener(e -> d.dispose());
@@ -277,7 +277,7 @@ public class EmergentePanel extends JPanel {
         bp.add(bS); bp.add(bC);
 
         JScrollPane sp = new JScrollPane(form);
-        sp.getViewport().setBackground(UIConstants.BG_PANEL); sp.setBorder(null);
+        sp.getViewport().setBackground(UIConstants.BG_CARD); sp.setBorder(null);
         d.add(sp, BorderLayout.CENTER); d.add(bp, BorderLayout.SOUTH);
         d.setVisible(true);
     }
