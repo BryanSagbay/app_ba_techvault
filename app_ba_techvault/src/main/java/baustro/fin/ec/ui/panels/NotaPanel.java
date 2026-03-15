@@ -26,7 +26,7 @@ public class NotaPanel extends JPanel {
 
     public NotaPanel() {
         setLayout(new BorderLayout());
-        setBackground(UIConstants.BG_DARK);
+        setBackground(UIConstants.BG_BASE);
         buildUI();
         loadData();
     }
@@ -34,7 +34,7 @@ public class NotaPanel extends JPanel {
     private void buildUI() {
         // Header
         JPanel header = new JPanel(new BorderLayout(10, 0));
-        header.setBackground(UIConstants.BG_PANEL);
+        header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(12, 20, 12, 20)));
@@ -53,28 +53,28 @@ public class NotaPanel extends JPanel {
 
         // Split: left list / right editor
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        split.setBackground(UIConstants.BG_DARK);
+        split.setBackground(UIConstants.BG_BASE);
         split.setDividerSize(4);
         split.setDividerLocation(260);
 
         // LEFT: Note list
         JPanel leftPanel = new JPanel(new BorderLayout(0, 0));
-        leftPanel.setBackground(UIConstants.BG_PANEL);
+        leftPanel.setBackground(UIConstants.BG_CARD);
 
         // SearchBar con icono en la barra lateral de notas
         JPanel searchWrap = new JPanel(new BorderLayout(0,0));
-        searchWrap.setBackground(UIConstants.BG_INPUT);
+        searchWrap.setBackground(UIConstants.BG_SURFACE);
         searchWrap.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0,0,1,0,UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(0,0,0,0)));
         JLabel searchIco = new JLabel();
-        searchIco.setOpaque(true); searchIco.setBackground(UIConstants.BG_INPUT);
+        searchIco.setOpaque(true); searchIco.setBackground(UIConstants.BG_SURFACE);
         searchIco.setBorder(BorderFactory.createEmptyBorder(0,8,0,4));
         ImageIcon _sico = IconManager.getSmallIcon(IconManager.ICON_SEARCH);
         if(_sico!=null&&_sico.getIconWidth()>1) searchIco.setIcon(_sico);
         else { searchIco.setText("Q"); searchIco.setFont(UIConstants.FONT_SMALL); searchIco.setForeground(UIConstants.TEXT_MUTED); }
         searchField = new JTextField();
-        searchField.setBackground(UIConstants.BG_INPUT); searchField.setForeground(UIConstants.TEXT_MUTED);
+        searchField.setBackground(UIConstants.BG_SURFACE); searchField.setForeground(UIConstants.TEXT_MUTED);
         searchField.setCaretColor(UIConstants.TEXT_PRIMARY); searchField.setFont(UIConstants.FONT_BODY);
         searchField.setBorder(BorderFactory.createEmptyBorder(8,0,8,8));
         searchField.setText("Buscar notas...");
@@ -90,7 +90,7 @@ public class NotaPanel extends JPanel {
 
         listModel = new DefaultListModel<>();
         noteList = new JList<>(listModel);
-        noteList.setBackground(UIConstants.BG_PANEL);
+        noteList.setBackground(UIConstants.BG_CARD);
         noteList.setForeground(UIConstants.TEXT_PRIMARY);
         noteList.setFont(UIConstants.FONT_BODY);
         noteList.setSelectionBackground(UIConstants.ACCENT_BLUE);
@@ -102,15 +102,15 @@ public class NotaPanel extends JPanel {
         });
 
         leftPanel.add(searchWrap, BorderLayout.NORTH);
-        leftPanel.add(new JScrollPane(noteList) {{ setBorder(null); getViewport().setBackground(UIConstants.BG_PANEL); }}, BorderLayout.CENTER);
+        leftPanel.add(new JScrollPane(noteList) {{ setBorder(null); getViewport().setBackground(UIConstants.BG_CARD); }}, BorderLayout.CENTER);
 
         // RIGHT: Editor
         JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.setBackground(UIConstants.BG_DARK);
+        rightPanel.setBackground(UIConstants.BG_BASE);
 
         // Editor toolbar
         JPanel editorBar = new JPanel(new BorderLayout(10, 0));
-        editorBar.setBackground(UIConstants.BG_PANEL);
+        editorBar.setBackground(UIConstants.BG_CARD);
         editorBar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(8, 16, 8, 16)));
@@ -133,7 +133,7 @@ public class NotaPanel extends JPanel {
 
         contentArea = StyledComponents.styledTextArea(10, 30);
         contentArea.setFont(UIConstants.FONT_BODY);
-        contentArea.setBackground(UIConstants.BG_DARK);
+        contentArea.setBackground(UIConstants.BG_BASE);
         contentArea.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
         rightPanel.add(editorBar, BorderLayout.NORTH);
@@ -152,7 +152,7 @@ public class NotaPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object val, int idx, boolean sel, boolean focus) {
                 Nota nota = (Nota) val;
                 JPanel p = new JPanel(new BorderLayout(6, 2));
-                p.setBackground(sel ? UIConstants.ACCENT_BLUE : (idx % 2 == 0 ? UIConstants.BG_PANEL : UIConstants.TABLE_ROW_ALT));
+                p.setBackground(sel ? UIConstants.ACCENT_BLUE : (idx % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER));
                 p.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
                         BorderFactory.createEmptyBorder(8, 12, 8, 12)));
@@ -262,7 +262,7 @@ public class NotaPanel extends JPanel {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Editar Info de Nota", true);
         d.setSize(400, 220);
         d.setLocationRelativeTo(this);
-        d.getContentPane().setBackground(UIConstants.BG_PANEL);
+        d.getContentPane().setBackground(UIConstants.BG_CARD);
         d.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(8,12,8,12); gbc.weightx = 1;
@@ -278,7 +278,7 @@ public class NotaPanel extends JPanel {
         gbc.gridy = 3; d.add(fTags, gbc);
 
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        btns.setBackground(UIConstants.BG_DARK);
+        btns.setBackground(UIConstants.BG_BASE);
         JButton ok = StyledComponents.successButton("Guardar");
         JButton cancel = StyledComponents.cancelButton("Cancelar");
         cancel.addActionListener(e -> d.dispose());

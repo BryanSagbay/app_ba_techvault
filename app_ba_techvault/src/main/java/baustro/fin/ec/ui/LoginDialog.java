@@ -31,7 +31,7 @@ public class LoginDialog extends JDialog {
         String dir = os.contains("win")
                 ? home + File.separator + "AppData" + File.separator + "Local" + File.separator + "TechOpsManager"
                 : home + File.separator + ".techopsmanager";
-        new File(dir).mkdirs();
+        boolean mkdirs = new File(dir).mkdirs();
         HASH_FILE = dir + File.separator + ".auth";
     }
 
@@ -45,7 +45,7 @@ public class LoginDialog extends JDialog {
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) { System.exit(0); }
         });
-        getContentPane().setBackground(UIConstants.BG_DARK);
+        getContentPane().setBackground(UIConstants.BG_BASE);
         buildUI();
     }
 
@@ -53,7 +53,7 @@ public class LoginDialog extends JDialog {
         setLayout(new BorderLayout());
 
         JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(UIConstants.BG_PANEL);
+        card.setBackground(UIConstants.BG_CARD);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(36, 44, 36, 44)));
@@ -158,7 +158,7 @@ public class LoginDialog extends JDialog {
         gbc.gridy = row;   gbc.insets = new Insets(0, 0, 0, 0);  card.add(hint, gbc);
 
         JPanel wrapper = new JPanel(new GridBagLayout());
-        wrapper.setBackground(UIConstants.BG_DARK);
+        wrapper.setBackground(UIConstants.BG_BASE);
         wrapper.add(card);
         add(wrapper, BorderLayout.CENTER);
 
@@ -192,7 +192,7 @@ public class LoginDialog extends JDialog {
     // Reuse StyledComponents inline
     private static JPasswordField styledPasswordField() {
         JPasswordField pf = new JPasswordField();
-        pf.setBackground(UIConstants.BG_INPUT);
+        pf.setBackground(UIConstants.BG_SURFACE);
         pf.setForeground(UIConstants.TEXT_PRIMARY);
         pf.setCaretColor(UIConstants.TEXT_PRIMARY);
         pf.setFont(UIConstants.FONT_BODY);

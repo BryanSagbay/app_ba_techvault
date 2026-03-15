@@ -1,6 +1,6 @@
 package baustro.fin.ec.model;
 
-public class Caso {
+public class Production {
     private int id;
     private String numeroTarea;
     private String titulo;
@@ -16,7 +16,7 @@ public class Caso {
     private String responsable;
     private String observaciones;
 
-    public Caso() {}
+    public Production() {}
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
