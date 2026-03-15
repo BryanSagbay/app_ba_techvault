@@ -20,7 +20,7 @@ public class SearchPanel extends JPanel {
 
     public SearchPanel(String placeholder, java.util.function.Consumer<String> onSearch) {
         setLayout(new BorderLayout(0, 0));
-        setBackground(UIConstants.BG_INPUT);
+        setBackground(UIConstants.BG_SURFACE);
         setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(0, 0, 0, 0)));
@@ -29,7 +29,7 @@ public class SearchPanel extends JPanel {
         // Icono de busqueda (izquierda)
         JLabel iconLabel = new JLabel();
         iconLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 6));
-        iconLabel.setBackground(UIConstants.BG_INPUT);
+        iconLabel.setBackground(UIConstants.BG_SURFACE);
         iconLabel.setOpaque(true);
         ImageIcon searchIcon = IconManager.getSmallIcon(IconManager.ICON_SEARCH);
         if (searchIcon != null && searchIcon.getIconWidth() > 1) {
@@ -43,7 +43,7 @@ public class SearchPanel extends JPanel {
 
         // Campo de texto
         textField = new JTextField();
-        textField.setBackground(UIConstants.BG_INPUT);
+        textField.setBackground(UIConstants.BG_SURFACE);
         textField.setForeground(UIConstants.TEXT_PRIMARY);
         textField.setCaretColor(UIConstants.TEXT_PRIMARY);
         textField.setFont(UIConstants.FONT_BODY);
