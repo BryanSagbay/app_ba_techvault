@@ -10,7 +10,6 @@ import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Stream;
@@ -28,7 +27,7 @@ public class TransaccionPanel extends JPanel {
 
     public TransaccionPanel() {
         setLayout(new BorderLayout());
-        setBackground(UIConstants.BG_DARK);
+        setBackground(UIConstants.BG_BASE);
         buildUI();
         loadData();
     }
@@ -36,7 +35,7 @@ public class TransaccionPanel extends JPanel {
     private void buildUI() {
         // HEADER con filtros
         JPanel header = new JPanel(new BorderLayout(10, 0));
-        header.setBackground(UIConstants.BG_PANEL);
+        header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(10, 20, 10, 16)));
@@ -51,9 +50,9 @@ public class TransaccionPanel extends JPanel {
         titlePane.add(title);
 
         hsf = new HeaderSearchFilter(
-                "Buscar TRX, subsistema, descripcion...",
+                "Buscar TRX, subsistema, descripción...",
                 new HeaderSearchFilter.ComboConfig("Tipo",     TIPOS,                                                              "Todos"),
-                new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"Subsistema", "Tipo", "Subtransaccion"},    "TRX A-Z")
+                new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"Subsistema", "Tipo", "Sub-transacción"},    "TRX A-Z")
         ).onChanged(this::applyFilters);
 
         header.add(titlePane, BorderLayout.WEST);
@@ -61,7 +60,7 @@ public class TransaccionPanel extends JPanel {
 
         // STATS BAR
         JPanel statsBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        statsBar.setBackground(new Color(20, 26, 38));
+        statsBar.setBackground(UIConstants.BG_SURFACE);
         statsBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER));
         statsLabel = new JLabel("Cargando...");
         statsLabel.setFont(UIConstants.FONT_SMALL);
@@ -69,7 +68,7 @@ public class TransaccionPanel extends JPanel {
         statsBar.add(statsLabel);
 
         // TABLA
-        String[] cols = {"#", "TRX", "Subsistema", "Subtransaccion", "Tipo", "Descripcion"};
+        String[] cols = {"#", "TRX", "Subsistema", "Sub-transacción", "Tipo", "Descripción"};
         tableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -93,7 +92,7 @@ public class TransaccionPanel extends JPanel {
 
         // BOTTOM
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-        bottom.setBackground(UIConstants.BG_DARK);
+        bottom.setBackground(UIConstants.BG_BASE);
         JButton btnNew    = StyledComponents.addButton("Nueva Transaccion");
         JButton btnEdit   = StyledComponents.editButton("Editar");
         JButton btnDelete = StyledComponents.dangerButton("Eliminar");
@@ -112,7 +111,7 @@ public class TransaccionPanel extends JPanel {
             public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean focus, int row, int col) {
                 super.getTableCellRendererComponent(t, val, sel, focus, row, col);
                 String s = val != null ? val.toString() : "";
-                setBackground(sel ? UIConstants.ACCENT_BLUE : (row % 2 == 0 ? UIConstants.BG_PANEL : UIConstants.TABLE_ROW_ALT));
+                setBackground(sel ? UIConstants.ACCENT_BLUE : (row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER));
                 setForeground(switch (s) {
                     case "Mantenimiento" -> UIConstants.ACCENT_ORANGE;
                     case "Consulta"      -> UIConstants.ACCENT_BLUE;
@@ -144,7 +143,7 @@ public class TransaccionPanel extends JPanel {
         Comparator<Transaccion> cmp = switch (sort) {
             case "Subsistema"      -> Comparator.comparing(t -> nvl(t.getSubsistema()));
             case "Tipo"            -> Comparator.comparing(t -> nvl(t.getTipo()));
-            case "Subtransaccion"  -> Comparator.comparing(t -> nvl(t.getSubtransaccion()));
+            case "Sub-transacción"  -> Comparator.comparing(t -> nvl(t.getSubtransaccion()));
             default                -> Comparator.comparing(t -> nvl(t.getTrx()));
         };
 
@@ -169,14 +168,11 @@ public class TransaccionPanel extends JPanel {
 
     private Transaccion getSelected() {
         int row = table.getSelectedRow();
-        if (row < 0) { JOptionPane.showMessageDialog(this, "Seleccione una transaccion."); return null; }
+        if (row < 0) { JOptionPane.showMessageDialog(this, "Seleccione una transacción."); return null; }
         String trx = (String) tableModel.getValueAt(row, 1);
-        int rowIdx  = row; // para buscar por posicion si hay duplicados de TRX
-        // Usar el indice # para encontrar la correcta
-        int num = (int) tableModel.getValueAt(row, 0);
-        if (num - 1 < allData.size()) {
-            // Filtrar igual que applyFilters y tomar el elemento en esa posicion
-        }
+        // Usar el índice # para encontrar la correcta
+        tableModel.getValueAt(row, 0);
+        // Filtrar igual que applyFilters y tomar el elemento en esa position
         return allData.stream().filter(t -> trx.equals(t.getTrx())).findFirst().orElse(null);
     }
 
@@ -196,18 +192,18 @@ public class TransaccionPanel extends JPanel {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 existing == null ? "Nueva Transaccion" : "Editar Transaccion", true);
         d.setSize(560, 400); d.setLocationRelativeTo(this);
-        d.getContentPane().setBackground(UIConstants.BG_PANEL);
+        d.getContentPane().setBackground(UIConstants.BG_CARD);
         d.setLayout(new BorderLayout());
 
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(UIConstants.BG_PANEL);
+        form.setBackground(UIConstants.BG_CARD);
         form.setBorder(BorderFactory.createEmptyBorder(22, 28, 12, 28));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(6, 6, 6, 6);
 
         JTextField fTrx     = StyledComponents.styledTextField("Ej: 0200, CB01...");
         JTextField fSubsis  = StyledComponents.styledTextField("Ej: CORE, ATM, WEB...");
-        JTextField fSubtrx  = StyledComponents.styledTextField("Codigo o nombre de subtransaccion");
+        JTextField fSubtrx  = StyledComponents.styledTextField("Codigo o nombre de sub-transacción");
         JComboBox<String> fTipo = StyledComponents.styledCombo(TIPOS);
         JTextArea  fDesc    = StyledComponents.styledTextArea(5, 40);
 
@@ -221,11 +217,11 @@ public class TransaccionPanel extends JPanel {
 
         int r = 0;
         ar(form, gbc, r++, "TRX *",          fTrx,    "Subsistema",    fSubsis);
-        ar(form, gbc, r++, "Subtransaccion",  fSubtrx, "Tipo",          fTipo);
-        af(form, gbc, r,   "Descripcion",     new JScrollPane(fDesc));
+        ar(form, gbc, r++, "Sub-transacción",  fSubtrx, "Tipo",          fTipo);
+        af(form, gbc, r, new JScrollPane(fDesc));
 
         JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
-        bp.setBackground(UIConstants.BG_DARK);
+        bp.setBackground(UIConstants.BG_BASE);
         JButton bS = StyledComponents.successButton("Guardar");
         JButton bC = StyledComponents.cancelButton("Cancelar");
         bC.addActionListener(e -> d.dispose());
@@ -247,7 +243,7 @@ public class TransaccionPanel extends JPanel {
         bp.add(bS); bp.add(bC);
 
         JScrollPane sp = new JScrollPane(form);
-        sp.getViewport().setBackground(UIConstants.BG_PANEL); sp.setBorder(null);
+        sp.getViewport().setBackground(UIConstants.BG_CARD); sp.setBorder(null);
         d.add(sp, BorderLayout.CENTER); d.add(bp, BorderLayout.SOUTH);
         d.setVisible(true);
     }
@@ -258,8 +254,8 @@ public class TransaccionPanel extends JPanel {
         g.gridx=2; g.weightx=0; p.add(fl(l2),g);
         g.gridx=3; g.weightx=.5; p.add(c2,g);
     }
-    private void af(JPanel p, GridBagConstraints g, int row, String lbl, Component c) {
-        g.gridy=row*2; g.gridx=0; g.gridwidth=4; g.weightx=1; p.add(fl(lbl),g);
+    private void af(JPanel p, GridBagConstraints g, int row, Component c) {
+        g.gridy=row*2; g.gridx=0; g.gridwidth=4; g.weightx=1; p.add(fl("Descripción"),g);
         g.gridy=row*2+1; p.add(c,g); g.gridwidth=1;
     }
     private JLabel fl(String t) {

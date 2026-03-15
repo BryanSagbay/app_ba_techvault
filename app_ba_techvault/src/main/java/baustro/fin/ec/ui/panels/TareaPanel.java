@@ -29,7 +29,7 @@ public class TareaPanel extends JPanel {
 
     public TareaPanel() {
         setLayout(new BorderLayout());
-        setBackground(UIConstants.BG_DARK);
+        setBackground(UIConstants.BG_BASE);
         buildUI();
         loadData();
     }
@@ -38,7 +38,7 @@ public class TareaPanel extends JPanel {
 
         // HEADER
         JPanel header = new JPanel(new BorderLayout(10,0));
-        header.setBackground(UIConstants.BG_PANEL);
+        header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0,0,1,0,UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(10,20,10,16)));
@@ -100,7 +100,7 @@ public class TareaPanel extends JPanel {
 
         // STATS BAR
         JPanel statsBar=new JPanel(new FlowLayout(FlowLayout.LEFT,6,4));
-        statsBar.setBackground(new Color(20,26,38));
+        statsBar.setBackground(UIConstants.BG_SURFACE);
         statsBar.setBorder(BorderFactory.createMatteBorder(0,0,1,0,UIConstants.BORDER));
 
         statsLabel=new JLabel();
@@ -140,7 +140,7 @@ public class TareaPanel extends JPanel {
 
         // BOTTOM
         JPanel bottom=new JPanel(new BorderLayout());
-        bottom.setBackground(UIConstants.BG_DARK);
+        bottom.setBackground(UIConstants.BG_BASE);
         bottom.setBorder(BorderFactory.createEmptyBorder(6,10,6,10));
         bottom.add(hsf,BorderLayout.CENTER);
 
@@ -159,7 +159,7 @@ public class TareaPanel extends JPanel {
             public Component getTableCellRendererComponent(JTable t,Object val,boolean sel,boolean focus,int row,int col){
                 super.getTableCellRendererComponent(t,val,sel,focus,row,col);
                 String s=val!=null?val.toString():"";
-                setBackground(sel?UIConstants.ACCENT_BLUE:(row%2==0?UIConstants.BG_PANEL:UIConstants.TABLE_ROW_ALT));
+                setBackground(sel?UIConstants.ACCENT_BLUE:(row%2==0?UIConstants.BG_CARD:UIConstants.BG_CARD_HOVER));
                 setForeground(type.equals("prioridad")?UIConstants.getPrioridadColor(s):UIConstants.getEstadoColor(s));
                 setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD));
                 setBorder(BorderFactory.createEmptyBorder(0,8,0,8));
@@ -173,7 +173,7 @@ public class TareaPanel extends JPanel {
             public Component getTableCellRendererComponent(JTable t,Object val,boolean sel,boolean focus,int row,int col){
                 super.getTableCellRendererComponent(t,val,sel,focus,row,col);
                 String fecha=val!=null?val.toString():"";
-                setBackground(sel?UIConstants.ACCENT_BLUE:(row%2==0?UIConstants.BG_PANEL:UIConstants.TABLE_ROW_ALT));
+                setBackground(sel?UIConstants.ACCENT_BLUE:(row%2==0?UIConstants.BG_CARD:UIConstants.BG_CARD_HOVER));
                 Color fc=UIConstants.TEXT_PRIMARY;
                 if(!fecha.isEmpty()){
                     try{
@@ -261,8 +261,8 @@ public class TareaPanel extends JPanel {
 
     private void openForm(Tarea existing){
         JDialog d=new JDialog((Frame)SwingUtilities.getWindowAncestor(this),existing==null?"Nueva Tarea":"Editar Tarea",true);
-        d.setSize(520,420);d.setLocationRelativeTo(this);d.getContentPane().setBackground(UIConstants.BG_PANEL);d.setLayout(new BorderLayout());
-        JPanel form=new JPanel(new GridBagLayout());form.setBackground(UIConstants.BG_PANEL);form.setBorder(BorderFactory.createEmptyBorder(20,24,10,24));
+        d.setSize(520,420);d.setLocationRelativeTo(this);d.getContentPane().setBackground(UIConstants.BG_CARD);d.setLayout(new BorderLayout());
+        JPanel form=new JPanel(new GridBagLayout());form.setBackground(UIConstants.BG_CARD);form.setBorder(BorderFactory.createEmptyBorder(20,24,10,24));
         GridBagConstraints gbc=new GridBagConstraints();gbc.fill=GridBagConstraints.HORIZONTAL;gbc.insets=new Insets(6,6,6,6);
         JTextField fTit=StyledComponents.styledTextField("Descripción de la tarea");
         JComboBox<String> fPri=StyledComponents.styledCombo(UIConstants.PRIORIDADES);
@@ -276,7 +276,7 @@ public class TareaPanel extends JPanel {
         ar(form,gbc,r++,"Prioridad",fPri,"Estado",fEst);
         ar(form,gbc,r++,"Fecha Limite",fFecha,null,null);
         af(form,gbc,r, new JScrollPane(fDesc));
-        JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,10));bp.setBackground(UIConstants.BG_DARK);
+        JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,10));bp.setBackground(UIConstants.BG_BASE);
         JButton bS=StyledComponents.successButton("Guardar");JButton bC=StyledComponents.cancelButton("Cancelar");
         bC.addActionListener(e->d.dispose());
         bS.addActionListener(e->{
@@ -288,7 +288,7 @@ public class TareaPanel extends JPanel {
             catch(Exception ex){JOptionPane.showMessageDialog(d,"Error: "+ex.getMessage());}
         });
         bp.add(bS);bp.add(bC);
-        JScrollPane sp=new JScrollPane(form);sp.getViewport().setBackground(UIConstants.BG_PANEL);sp.setBorder(null);
+        JScrollPane sp=new JScrollPane(form);sp.getViewport().setBackground(UIConstants.BG_CARD);sp.setBorder(null);
         d.add(sp,BorderLayout.CENTER);d.add(bp,BorderLayout.SOUTH);d.setVisible(true);
     }
     private void ar(JPanel p,GridBagConstraints g,int row,String l1,Component c1,String l2,Component c2){
