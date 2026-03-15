@@ -5,9 +5,12 @@ import java.awt.*;
 public final class UIConstants {
 
     // COLOR PALETTE
-    public static final Color BG_DARK       = new Color(28, 35, 49);
-    public static final Color BG_PANEL      = new Color(36, 45, 61);
-    public static final Color BG_INPUT      = new Color(52, 65, 86);
+    public static final Color BG_ROW_SEL   = new Color(0x1E, 0x35, 0x5C);
+    public static final Color ACCENT       = new Color(0x3D, 0x8E, 0xFF);
+    public static final Color BORDER_LINE  = new Color(0x25, 0x2A, 0x3A);
+    public static final Color TEXT_1       = new Color(0xE8, 0xEA, 0xF0);
+    public static final Color TEXT_2       = new Color(0x8A, 0x90, 0xA8);
+    public static final Color TEXT_3       = new Color(0x55, 0x5C, 0x78);
     public static final Color ACCENT_BLUE   = new Color(59, 130, 246);
     public static final Color ACCENT_GREEN  = new Color(34, 197, 94);
     public static final Color ACCENT_ORANGE = new Color(249, 115, 22);
@@ -18,15 +21,12 @@ public final class UIConstants {
     public static final Color TEXT_SECONDARY= new Color(148, 163, 184);
     public static final Color TEXT_MUTED    = new Color(100, 116, 139);
     public static final Color BORDER        = new Color(55, 68, 90);
-    public static final Color TABLE_ROW_ALT = new Color(40, 50, 68);
-    // PALETTE
-    public static final Color BG_BASE        = new Color(0x0D0F14);
+    public static final Color BG_BASE        = new Color(28, 35, 49);
     public static final Color BG_SURFACE     = new Color(0x13161E);
     public static final Color BG_CARD        = new Color(0x181C26);
     public static final Color BG_CARD_HOVER  = new Color(0x1E2330);
     public static final Color BORDER_SUBTLE  = new Color(0x252A38);
     public static final Color BORDER_ACTIVE  = new Color(0x2E3447);
-
     public static final Color TEAL_PRIMARY   = new Color(0x00D2C8);
     public static final Color INDIGO         = new Color(0x6C6FFF);
     public static final Color AMBER          = new Color(0xF5A623);
@@ -34,7 +34,6 @@ public final class UIConstants {
     public static final Color EMERALD        = new Color(0x00C87A);
     public static final Color VIOLET         = new Color(0xA855F7);
     public static final Color SKY            = new Color(0x38BDF8);
-
     public static final Color TEXT_BRIGHT    = new Color(0xF1F3F9);
     public static final Color TEXT_MID       = new Color(0x8891A8);
     public static final Color TEXT_DIM       = new Color(0x4D566B);
