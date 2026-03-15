@@ -11,7 +11,7 @@ public class IconManager {
 
     private static final Map<String, ImageIcon> cache = new HashMap<>();
 
-    // Nombres de iconos — deben existir en src/main/resources/icons/<name>.png
+    // Nombres de iconos en src/main/resources/icons/<name>.png
     public static final String ICON_APP = "app";
     public static final String ICON_DASHBOARD = "dashboard";
     public static final String ICON_CORRECTIVO = "correctivo";
@@ -28,7 +28,7 @@ public class IconManager {
     public static final String ICON_LOCK = "lock";
     //public static final String ICON_SETTINGS = "settings";
     //public static final String ICON_EXPORT = "export";
-    //public static final String ICON_FOLDER = "folder";
+    public static final String ICON_FOLDER = "folder";
     public static final String ICON_SEARCH = "search";
     public static final String ICON_SAVE = "save";
     public static final String ICON_CANCEL = "cancel";
@@ -36,12 +36,12 @@ public class IconManager {
     public static final String ICON_TRX = "trx";
     public static final String ICON_AZURE = "azure";
     //public static final String ICON_REFRESH = "refresh";
-    //public static final String ICON_WARNING = "warning";
-    //public static final String ICON_SUCCESS = "success";
-    //public static final String ICON_INFO = "info";
-    //public static final String ICON_FILTER = "filter";
+    public static final String ICON_WARNING = "warning";
+    public static final String ICON_SUCCESS = "success";
+    public static final String ICON_INFO = "info";
+    public static final String ICON_FILTER = "filter";
     //public static final String ICON_EYE_OFF = "eye_off";
-    //public static final String ICON_UNLOCK = "unlock";
+    public static final String ICON_UNLOCK = "unlock";
     //public static final String ICON_IMPORT = "import";
 
     public static ImageIcon getIcon(String name, int size) {

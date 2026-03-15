@@ -1,6 +1,5 @@
 package baustro.fin.ec.ui;
 
-import baustro.fin.ec.security.EncryptionUtil;
 import baustro.fin.ec.ui.panels.*;
 import baustro.fin.ec.util.IconManager;
 
@@ -8,11 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +25,7 @@ public class MainFrame extends JFrame {
     private static final String PANEL_TAREA = "tareas";
     private static final String PANEL_NOTA = "notas";
     private static final String PANEL_COMANDO  = "comandos";
-    private static final String PANEL_CASOS = "casos";
+    private static final String PANEL_PRODUCTION = "produccion";
     private static final String PANEL_MANUAL = "manual";
     private static final String PANEL_TRANSACCION = "transacciones";
     private static final String PANEL_EMERGENTE   = "emergentes";
@@ -51,13 +45,13 @@ public class MainFrame extends JFrame {
     }
 
     private void buildUI() {
-        getContentPane().setBackground(UIConstants.BG_DARK);
+        getContentPane().setBackground(UIConstants.BG_BASE);
         setLayout(new BorderLayout());
 
         contentPanel = new JPanel();
         cardLayout   = new CardLayout();
         contentPanel.setLayout(cardLayout);
-        contentPanel.setBackground(UIConstants.BG_DARK);
+        contentPanel.setBackground(UIConstants.BG_BASE);
 
         // Solo carga el Dashboard al inicio
         showPanel(PANEL_DASHBOARD);
@@ -71,7 +65,7 @@ public class MainFrame extends JFrame {
      * SwingWorker para no bloquear el EDT durante la consulta inicial a SQLite.
      */
     private void showPanel(String panelName) {
-        // Contrasenas: destruir y recrear siempre para forzar el lock screen
+        // Password: destruir y recrear siempre para forzar el lock screen
         if (PANEL_PASSWORD.equals(panelName) && loadedPanels.containsKey(panelName)) {
             JPanel old = loadedPanels.remove(panelName);
             contentPanel.remove(old);
@@ -121,7 +115,7 @@ public class MainFrame extends JFrame {
             case PANEL_TAREA      -> new TareaPanel();
             case PANEL_NOTA       -> new NotaPanel();
             case PANEL_COMANDO    -> new ComandoPanel();
-            case PANEL_CASOS -> new CasoPanel();
+            case PANEL_PRODUCTION -> new ProductionPanel();
             case PANEL_MANUAL -> new ManualPanel();
             case PANEL_TRANSACCION -> new TransaccionPanel();
             case PANEL_EMERGENTE   -> new EmergentePanel();
@@ -131,7 +125,7 @@ public class MainFrame extends JFrame {
 
     private JPanel buildSpinner() {
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBackground(UIConstants.BG_DARK);
+        p.setBackground(UIConstants.BG_BASE);
         JLabel lbl = new JLabel("Cargando...");
         lbl.setFont(UIConstants.FONT_HEADING);
         lbl.setForeground(UIConstants.TEXT_MUTED);
@@ -143,13 +137,13 @@ public class MainFrame extends JFrame {
     private JPanel buildSidebar() {
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBackground(UIConstants.BG_PANEL);
+        sidebar.setBackground(UIConstants.BG_CARD);
         sidebar.setPreferredSize(new Dimension(210, 0));
         sidebar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UIConstants.BORDER));
 
         // Logo
         JPanel logoPanel = new JPanel(new BorderLayout(10, 0));
-        logoPanel.setBackground(UIConstants.BG_DARK);
+        logoPanel.setBackground(UIConstants.BG_BASE);
         logoPanel.setBorder(BorderFactory.createEmptyBorder(18, 16, 18, 16));
         logoPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         JLabel appName = new JLabel("TechOps Manager");
@@ -177,7 +171,7 @@ public class MainFrame extends JFrame {
         sidebar.add(navButton("Transacciones", IconManager.ICON_TRX, PANEL_TRANSACCION));
 
         sidebar.add(sectionLabel("DOCUMENTACIÓN"));
-        sidebar.add(navButton("Casos", IconManager.ICON_CORRECTIVO, PANEL_CASOS));
+        sidebar.add(navButton("Producción", IconManager.ICON_CORRECTIVO, PANEL_PRODUCTION));
         sidebar.add(navButton("Manuales", IconManager.ICON_MANUAL, PANEL_MANUAL));
         sidebar.add(navButton("Emergentes", IconManager.ICON_AZURE, PANEL_EMERGENTE));
 
@@ -189,12 +183,30 @@ public class MainFrame extends JFrame {
         return sidebar;
     }
 
-    private void setNavActive(JPanel btnDash, boolean b) {
+    private void setNavActive(JPanel btn, boolean active) {
+        if (btn == null) return;
+        if (active) {
+            btn.setBackground(UIConstants.BG_SURFACE);
+            btn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 3, 0, 0, UIConstants.ACCENT_BLUE),
+                    BorderFactory.createEmptyBorder(11, 15, 11, 18)
+            ));
+        } else {
+            btn.setBackground(UIConstants.BG_CARD);
+            btn.setBorder(BorderFactory.createEmptyBorder(11, 18, 11, 18));
+        }
+        // Update label color inside the button
+        for (Component c : btn.getComponents()) {
+            if (c instanceof JLabel lbl) {
+                lbl.setForeground(active ? UIConstants.TEXT_PRIMARY : UIConstants.TEXT_SECONDARY);
+            }
+        }
+        btn.repaint();
     }
 
     private JPanel getJPanel() {
         JPanel bottomInfo = new JPanel(new BorderLayout());
-        bottomInfo.setBackground(UIConstants.BG_PANEL);
+        bottomInfo.setBackground(UIConstants.BG_CARD);
         bottomInfo.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 0, 0, 0, UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(10, 16, 10, 16)));
@@ -208,7 +220,7 @@ public class MainFrame extends JFrame {
 
     private JPanel navButton(String text, String iconName, String panelName) {
         JPanel btn = new JPanel(new BorderLayout(10, 0));
-        btn.setBackground(UIConstants.BG_PANEL);
+        btn.setBackground(UIConstants.BG_CARD);
         btn.setBorder(BorderFactory.createEmptyBorder(11, 18, 11, 18));
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -236,7 +248,7 @@ public class MainFrame extends JFrame {
                 if (activeNavBtn != btn) btn.setBackground(UIConstants.BG_CARD);
             }
             public void mouseExited(MouseEvent e) {
-                if (activeNavBtn != btn) btn.setBackground(UIConstants.BG_PANEL);
+                if (activeNavBtn != btn) btn.setBackground(UIConstants.BG_CARD);
             }
         });
         return btn;
@@ -253,7 +265,7 @@ public class MainFrame extends JFrame {
 
     private JPanel sectionLabel(String text) {
         JPanel p = new JPanel(new BorderLayout());
-        p.setBackground(UIConstants.BG_PANEL);
+        p.setBackground(UIConstants.BG_CARD);
         p.setBorder(BorderFactory.createEmptyBorder(10, 18, 3, 18));
         p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         JLabel lbl = new JLabel(text);

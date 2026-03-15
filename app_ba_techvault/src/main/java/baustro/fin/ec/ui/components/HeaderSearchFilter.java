@@ -35,7 +35,7 @@ public class HeaderSearchFilter extends JPanel {
 
         //  SearchBar con icono
         JPanel searchWrap = new JPanel(new BorderLayout(0, 0));
-        searchWrap.setBackground(UIConstants.BG_INPUT);
+        searchWrap.setBackground(UIConstants.BG_SURFACE);
         searchWrap.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(0, 0, 0, 0)));
@@ -44,7 +44,7 @@ public class HeaderSearchFilter extends JPanel {
         // Icono busqueda
         JLabel iconLbl = new JLabel();
         iconLbl.setOpaque(true);
-        iconLbl.setBackground(UIConstants.BG_INPUT);
+        iconLbl.setBackground(UIConstants.BG_SURFACE);
         iconLbl.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 4));
         ImageIcon searchIco = IconManager.getSmallIcon(IconManager.ICON_SEARCH);
         if (searchIco != null && searchIco.getIconWidth() > 1) {
@@ -57,7 +57,7 @@ public class HeaderSearchFilter extends JPanel {
 
         // Campo
         searchField = new JTextField();
-        searchField.setBackground(UIConstants.BG_INPUT);
+        searchField.setBackground(UIConstants.BG_SURFACE);
         searchField.setForeground(UIConstants.TEXT_MUTED);
         searchField.setCaretColor(UIConstants.TEXT_PRIMARY);
         searchField.setFont(UIConstants.FONT_BODY);
@@ -113,7 +113,7 @@ public class HeaderSearchFilter extends JPanel {
             System.arraycopy(cfg.options(), 0, opts, 1, cfg.options().length);
 
             JComboBox<String> combo = new JComboBox<>(opts);
-            combo.setBackground(UIConstants.BG_INPUT);
+            combo.setBackground(UIConstants.BG_SURFACE);
             combo.setForeground(UIConstants.TEXT_PRIMARY);
             combo.setFont(UIConstants.FONT_SMALL);
             combo.setPreferredSize(new Dimension(120, 32));

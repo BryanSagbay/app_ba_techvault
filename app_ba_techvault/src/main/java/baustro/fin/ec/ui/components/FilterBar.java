@@ -58,7 +58,7 @@ public class FilterBar extends JPanel {
 
         public FilterCombo(String label, String[] options, String allLabel) {
             this.allLabel = allLabel;
-            setBackground(UIConstants.BG_DARK);
+            setBackground(UIConstants.BG_BASE);
             setLayout(new FlowLayout(FlowLayout.LEFT, 4, 0));
 
             JLabel lbl = new JLabel(label + ":");
@@ -70,7 +70,7 @@ public class FilterBar extends JPanel {
             System.arraycopy(options, 0, opts, 1, options.length);
 
             combo = new JComboBox<>(opts);
-            combo.setBackground(UIConstants.BG_INPUT);
+            combo.setBackground(UIConstants.BG_SURFACE);
             combo.setForeground(UIConstants.TEXT_PRIMARY);
             combo.setFont(UIConstants.FONT_SMALL);
             combo.setBorder(BorderFactory.createLineBorder(UIConstants.BORDER));
@@ -95,7 +95,7 @@ public class FilterBar extends JPanel {
         private final JComboBox<String> combo;
 
         public SortCombo(String[] options) {
-            setBackground(UIConstants.BG_DARK);
+            setBackground(UIConstants.BG_BASE);
             setLayout(new FlowLayout(FlowLayout.LEFT, 4, 0));
 
             JLabel lbl = new JLabel("Ordenar:");
@@ -103,7 +103,7 @@ public class FilterBar extends JPanel {
             lbl.setForeground(UIConstants.TEXT_MUTED);
 
             combo = new JComboBox<>(options);
-            combo.setBackground(UIConstants.BG_INPUT);
+            combo.setBackground(UIConstants.BG_SURFACE);
             combo.setForeground(UIConstants.TEXT_PRIMARY);
             combo.setFont(UIConstants.FONT_SMALL);
             combo.setBorder(BorderFactory.createLineBorder(UIConstants.BORDER));
@@ -126,7 +126,7 @@ public class FilterBar extends JPanel {
     private JLabel activeCountLabel;
 
     public FilterBar() {
-        setBackground(UIConstants.BG_DARK);
+        setBackground(UIConstants.BG_BASE);
         setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
                 BorderFactory.createEmptyBorder(8, 16, 8, 16)));
