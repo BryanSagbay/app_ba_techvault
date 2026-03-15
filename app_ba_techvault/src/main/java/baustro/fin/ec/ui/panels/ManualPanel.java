@@ -3,6 +3,7 @@ package baustro.fin.ec.ui.panels;
 import baustro.fin.ec.ui.components.HeaderSearchFilter;
 import baustro.fin.ec.util.IconManager;
 
+import baustro.fin.ec.ui.UIConstants;
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.border.*;
@@ -16,19 +17,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class ManualPanel extends JPanel {
-
-    //  Paleta
-    private static final Color BG_PAGE      = new Color(0x0F, 0x11, 0x17);
-    private static final Color BG_CARD      = new Color(0x16, 0x19, 0x22);
-    private static final Color BG_ROW_ODD   = new Color(0x16, 0x19, 0x22);
-    private static final Color BG_ROW_EVEN  = new Color(0x1B, 0x1E, 0x29);
-    private static final Color BG_ROW_HOVER = new Color(0x22, 0x28, 0x3A);
-    private static final Color BG_ROW_SEL   = new Color(0x1E, 0x35, 0x5C);
-    private static final Color ACCENT       = new Color(0x3D, 0x8E, 0xFF);
-    private static final Color BORDER_LINE  = new Color(0x25, 0x2A, 0x3A);
-    private static final Color TEXT_1       = new Color(0xE8, 0xEA, 0xF0);
-    private static final Color TEXT_2       = new Color(0x8A, 0x90, 0xA8);
-    private static final Color TEXT_3       = new Color(0x55, 0x5C, 0x78);
 
     // Badge colors por extensión
     private static final Map<String, Color> BADGE_COLOR = new LinkedHashMap<>();
@@ -61,7 +49,7 @@ public class ManualPanel extends JPanel {
     //
     public ManualPanel() {
         setLayout(new BorderLayout());
-        setBackground(BG_PAGE);
+        setBackground(UIConstants.BG_SURFACE);
         buildUI();
         loadFiles();
         startFolderWatcher();   // ← detecta archivos nuevos automáticamente
@@ -99,9 +87,9 @@ public class ManualPanel extends JPanel {
     /** Barra superior: título + filtros */
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout(16, 0));
-        bar.setBackground(BG_CARD);
+        bar.setBackground(UIConstants.BG_CARD);
         bar.setBorder(new CompoundBorder(
-                new MatteBorder(0, 0, 1, 0, BORDER_LINE),
+                new MatteBorder(0, 0, 1, 0, UIConstants.BORDER_LINE),
                 new EmptyBorder(14, 24, 14, 24)
         ));
 
@@ -110,12 +98,12 @@ public class ManualPanel extends JPanel {
         titleGroup.setOpaque(false);
 
         JLabel dot = new JLabel("●");
-        dot.setForeground(ACCENT);
+        dot.setForeground(UIConstants.ACCENT);
         dot.setFont(new Font("Segoe UI", Font.PLAIN, 10));
 
         JLabel title = new JLabel("Manuales");
         title.setFont(FONT_TITLE);
-        title.setForeground(TEXT_1);
+        title.setForeground(UIConstants.TEXT_1);
 
         ImageIcon ico = IconManager.getIcon(IconManager.ICON_MANUAL, 20);
         if (ico != null) {
@@ -176,7 +164,7 @@ public class ManualPanel extends JPanel {
         JScrollPane scroll = buildDarkScrollPane(table);
 
         JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(BG_PAGE);
+        wrapper.setBackground(UIConstants.BG_SURFACE);
         wrapper.setBorder(new EmptyBorder(12, 16, 0, 16));
         wrapper.add(scroll, BorderLayout.CENTER);
         return wrapper;
@@ -185,17 +173,17 @@ public class ManualPanel extends JPanel {
     /** Barra inferior: botones + contador */
     private JPanel buildBottomBar() {
         JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(BG_CARD);
+        bar.setBackground(UIConstants.BG_CARD);
         bar.setBorder(new CompoundBorder(
-                new MatteBorder(1, 0, 0, 0, BORDER_LINE),
+                new MatteBorder(1, 0, 0, 0, UIConstants.BORDER_LINE),
                 new EmptyBorder(10, 24, 10, 24)
         ));
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         left.setOpaque(false);
 
-        JButton btnOpen    = accentButton("Abrir");
-        JButton btnRefresh = ghostButton("Actualizar");
+        JButton btnOpen    = accentButton();
+        JButton btnRefresh = ghostButton();
 
         btnOpen.addActionListener(e -> openSelected());
         btnRefresh.addActionListener(e -> loadFiles());
@@ -205,7 +193,7 @@ public class ManualPanel extends JPanel {
 
         lblCounter = new JLabel("0 archivos");
         lblCounter.setFont(FONT_SMALL);
-        lblCounter.setForeground(TEXT_3);
+        lblCounter.setForeground(UIConstants.TEXT_3);
         JLabel counter = lblCounter;
 
         bar.add(left,    BorderLayout.WEST);
@@ -215,24 +203,24 @@ public class ManualPanel extends JPanel {
 
     //  Estilos de tabla
     private void styleModernTable(JTable t) {
-        t.setBackground(BG_ROW_ODD);
-        t.setForeground(TEXT_1);
+        t.setBackground(UIConstants.BG_CARD);
+        t.setForeground(UIConstants.TEXT_1);
         t.setFont(FONT_BODY);
         t.setRowHeight(42);
         t.setShowGrid(false);
         t.setIntercellSpacing(new Dimension(0, 0));
-        t.setSelectionBackground(BG_ROW_SEL);
-        t.setSelectionForeground(TEXT_1);
+        t.setSelectionBackground(UIConstants.BG_ROW_SEL);
+        t.setSelectionForeground(UIConstants.TEXT_1);
         t.setFocusable(false);
         t.setBorder(null);
 
         // Header
         JTableHeader header = t.getTableHeader();
-        header.setBackground(new Color(0x12, 0x15, 0x1E));
-        header.setForeground(TEXT_2);
+        header.setBackground(UIConstants.BG_SURFACE);
+        header.setForeground(UIConstants.TEXT_2);
         header.setFont(FONT_HEADER);
         header.setPreferredSize(new Dimension(0, 38));
-        header.setBorder(new MatteBorder(0, 0, 1, 0, BORDER_LINE));
+        header.setBorder(new MatteBorder(0, 0, 1, 0, UIConstants.BORDER_LINE));
         header.setDefaultRenderer(new ModernHeaderRenderer());
         header.setReorderingAllowed(false);
 
@@ -251,13 +239,13 @@ public class ManualPanel extends JPanel {
 
     private JScrollPane buildDarkScrollPane(JComponent c) {
         JScrollPane sp = new JScrollPane(c);
-        sp.setBorder(new LineBorder(BORDER_LINE, 1, true));
-        sp.getViewport().setBackground(BG_ROW_ODD);
-        sp.setBackground(BG_PAGE);
+        sp.setBorder(new LineBorder(UIConstants.BORDER_LINE, 1, true));
+        sp.getViewport().setBackground(UIConstants.BG_CARD);
+        sp.setBackground(UIConstants.BG_SURFACE);
 
         // Scrollbar vertical
         JScrollBar vsb = sp.getVerticalScrollBar();
-        vsb.setBackground(BG_CARD);
+        vsb.setBackground(UIConstants.BG_CARD);
         vsb.setUI(new SlimScrollBarUI());
 
         sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -268,16 +256,16 @@ public class ManualPanel extends JPanel {
     private void styleSearchFilter(JPanel p) {
         applyRecursive(p, c -> {
             if (c instanceof JTextField tf) {
-                tf.setBackground(new Color(0x0F, 0x11, 0x17));
-                tf.setForeground(TEXT_1);
-                tf.setCaretColor(ACCENT);
+                tf.setBackground(UIConstants.BG_SURFACE);
+                tf.setForeground(UIConstants.TEXT_1);
+                tf.setCaretColor(UIConstants.ACCENT);
                 tf.setBorder(new CompoundBorder(
-                        new LineBorder(BORDER_LINE, 1, true),
+                        new LineBorder(UIConstants.BORDER_LINE, 1, true),
                         new EmptyBorder(4, 10, 4, 10)));
                 tf.setFont(FONT_BODY);
             } else if (c instanceof JComboBox<?> cb) {
-                cb.setBackground(new Color(0x0F, 0x11, 0x17));
-                cb.setForeground(TEXT_1);
+                cb.setBackground(UIConstants.BG_SURFACE);
+                cb.setForeground(UIConstants.TEXT_1);
                 cb.setFont(FONT_BODY);
             } else {
                 c.setBackground(null);
@@ -378,7 +366,7 @@ public class ManualPanel extends JPanel {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(t,v,sel,foc,row,col);
             lbl.setText(v != null ? v.toString() : "");
             lbl.setFont(FONT_SMALL);
-            lbl.setForeground(TEXT_3);
+            lbl.setForeground(UIConstants.TEXT_3);
             lbl.setHorizontalAlignment(CENTER);
             lbl.setBackground(rowBg(t, row, sel));
             lbl.setOpaque(true);
@@ -394,7 +382,7 @@ public class ManualPanel extends JPanel {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(t,v,sel,foc,row,col);
             lbl.setText(v != null ? v.toString() : "");
             lbl.setFont(FONT_BODY);
-            lbl.setForeground(sel ? TEXT_1 : new Color(0xD0, 0xD5, 0xE8));
+            lbl.setForeground(sel ? UIConstants.TEXT_1 : new Color(0xD0, 0xD5, 0xE8));
             lbl.setBackground(rowBg(t, row, sel));
             lbl.setOpaque(true);
             lbl.setBorder(new EmptyBorder(0, 12, 0, 8));
@@ -417,7 +405,7 @@ public class ManualPanel extends JPanel {
             if (ext.isEmpty()) return;
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            Color base = BADGE_COLOR.getOrDefault(ext, TEXT_3);
+            Color base = BADGE_COLOR.getOrDefault(ext, UIConstants.TEXT_3);
             Color bg   = new Color(base.getRed(), base.getGreen(), base.getBlue(), 28);
             FontMetrics fm = g2.getFontMetrics(FONT_BADGE);
             int tw = fm.stringWidth(ext);
@@ -440,7 +428,7 @@ public class ManualPanel extends JPanel {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(t,v,sel,foc,row,col);
             lbl.setText(v != null ? v.toString() : "");
             lbl.setFont(FONT_SMALL);
-            lbl.setForeground(TEXT_2);
+            lbl.setForeground(UIConstants.TEXT_2);
             lbl.setHorizontalAlignment(RIGHT);
             lbl.setBackground(rowBg(t, row, sel));
             lbl.setOpaque(true);
@@ -456,7 +444,7 @@ public class ManualPanel extends JPanel {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(t,v,sel,foc,row,col);
             lbl.setText(v != null ? v.toString() : "");
             lbl.setFont(FONT_SMALL);
-            lbl.setForeground(TEXT_2);
+            lbl.setForeground(UIConstants.TEXT_2);
             lbl.setBackground(rowBg(t, row, sel));
             lbl.setOpaque(true);
             lbl.setBorder(new EmptyBorder(0, 8, 0, 8));
@@ -471,8 +459,8 @@ public class ManualPanel extends JPanel {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(t,v,sel,foc,row,col);
             lbl.setText(v != null ? v.toString().toUpperCase() : "");
             lbl.setFont(FONT_HEADER);
-            lbl.setForeground(TEXT_2);
-            lbl.setBackground(new Color(0x12, 0x15, 0x1E));
+            lbl.setForeground(UIConstants.TEXT_2);
+            lbl.setBackground(UIConstants.BG_SURFACE);
             lbl.setOpaque(true);
             lbl.setBorder(new EmptyBorder(0, col == 1 ? 12 : 8, 0, 8));
             return lbl;
@@ -480,17 +468,17 @@ public class ManualPanel extends JPanel {
     }
 
     // Botones
-    private JButton accentButton(String text) {
-        JButton btn = new JButton(text) {
+    private JButton accentButton() {
+        JButton btn = new JButton("Abrir") {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 if (getModel().isPressed())
-                    g2.setColor(ACCENT.darker());
+                    g2.setColor(UIConstants.ACCENT.darker());
                 else if (getModel().isRollover())
-                    g2.setColor(ACCENT.brighter());
+                    g2.setColor(UIConstants.ACCENT.brighter());
                 else
-                    g2.setColor(ACCENT);
+                    g2.setColor(UIConstants.ACCENT);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
                 g2.dispose();
                 super.paintComponent(g);
@@ -506,24 +494,24 @@ public class ManualPanel extends JPanel {
         return btn;
     }
 
-    private JButton ghostButton(String text) {
-        JButton btn = new JButton(text) {
+    private JButton ghostButton() {
+        JButton btn = new JButton("Actualizar") {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Color bg = getModel().isRollover()
                         ? new Color(0x25, 0x2A, 0x3A)
-                        : new Color(0x1B, 0x1E, 0x29);
+                        : UIConstants.BG_BASE;
                 g2.setColor(bg);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.setColor(BORDER_LINE);
+                g2.setColor(UIConstants.BORDER_LINE);
                 g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 8, 8);
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
         btn.setFont(FONT_SMALL);
-        btn.setForeground(TEXT_2);
+        btn.setForeground(UIConstants.TEXT_2);
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
@@ -536,7 +524,7 @@ public class ManualPanel extends JPanel {
     private static class SlimScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
         protected void configureScrollBarColors() {
             thumbColor     = new Color(0x35, 0x3C, 0x55);
-            trackColor     = new Color(0x12, 0x15, 0x1E);
+            trackColor     = UIConstants.BG_SURFACE;
             thumbDarkShadowColor = trackColor;
             thumbHighlightColor  = thumbColor;
             thumbLightShadowColor = thumbColor;
@@ -563,10 +551,10 @@ public class ManualPanel extends JPanel {
 
     // Helpers
     private Color rowBg(JTable t, int row, boolean sel) {
-        if (sel) return BG_ROW_SEL;
+        if (sel) return UIConstants.BG_ROW_SEL;
         Point mouse = t.getMousePosition();
-        if (mouse != null && t.rowAtPoint(mouse) == row) return BG_ROW_HOVER;
-        return (row % 2 == 0) ? BG_ROW_ODD : BG_ROW_EVEN;
+        if (mouse != null && t.rowAtPoint(mouse) == row) return UIConstants.BG_CARD_HOVER;
+        return (row % 2 == 0) ? UIConstants.BG_CARD : UIConstants.BG_BASE;
     }
 
     @FunctionalInterface
