@@ -80,7 +80,7 @@ public final class StyledComponents {
         btn.setContentAreaFilled(true);
         btn.setOpaque(true);
         btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { btn.setBackground(UIConstants.BG_INPUT); }
+            public void mouseEntered(MouseEvent e) { btn.setBackground(UIConstants.BG_SURFACE); }
             public void mouseExited(MouseEvent e)  { btn.setBackground(UIConstants.BG_CARD); }
         });
         return btn;
@@ -94,7 +94,7 @@ public final class StyledComponents {
     }
 
     public static void styleTextField(JTextField tf) {
-        tf.setBackground(UIConstants.BG_INPUT);
+        tf.setBackground(UIConstants.BG_SURFACE);
         tf.setForeground(UIConstants.TEXT_PRIMARY);
         tf.setCaretColor(UIConstants.TEXT_PRIMARY);
         tf.setFont(UIConstants.FONT_BODY);
@@ -105,7 +105,7 @@ public final class StyledComponents {
 
     public static JPasswordField styledPasswordField() {
         JPasswordField pf = new JPasswordField();
-        pf.setBackground(UIConstants.BG_INPUT);
+        pf.setBackground(UIConstants.BG_SURFACE);
         pf.setForeground(UIConstants.TEXT_PRIMARY);
         pf.setCaretColor(UIConstants.TEXT_PRIMARY);
         pf.setFont(UIConstants.FONT_BODY);
@@ -118,7 +118,7 @@ public final class StyledComponents {
     // TextArea
     public static JTextArea styledTextArea(int rows, int cols) {
         JTextArea ta = new JTextArea(rows, cols);
-        ta.setBackground(UIConstants.BG_INPUT);
+        ta.setBackground(UIConstants.BG_SURFACE);
         ta.setForeground(UIConstants.TEXT_PRIMARY);
         ta.setCaretColor(UIConstants.TEXT_PRIMARY);
         ta.setFont(UIConstants.FONT_BODY);
@@ -137,7 +137,7 @@ public final class StyledComponents {
     // ComboBox
     public static JComboBox<String> styledCombo(String[] items) {
         JComboBox<String> cb = new JComboBox<>(items);
-        cb.setBackground(UIConstants.BG_INPUT);
+        cb.setBackground(UIConstants.BG_SURFACE);
         cb.setForeground(UIConstants.TEXT_PRIMARY);
         cb.setFont(UIConstants.FONT_BODY);
         cb.setBorder(BorderFactory.createLineBorder(UIConstants.BORDER));
@@ -163,7 +163,7 @@ public final class StyledComponents {
     // ScrollPane
     public static JScrollPane darkScrollPane(Component c) {
         JScrollPane sp = new JScrollPane(c);
-        sp.getViewport().setBackground(UIConstants.BG_PANEL);
+        sp.getViewport().setBackground(UIConstants.BG_CARD);
         sp.setBorder(BorderFactory.createLineBorder(UIConstants.BORDER));
         sp.getVerticalScrollBar().setBackground(UIConstants.BG_CARD);
         sp.getHorizontalScrollBar().setBackground(UIConstants.BG_CARD);
@@ -172,7 +172,7 @@ public final class StyledComponents {
 
     // Tabla oscura
     public static void styleTable(JTable table) {
-        table.setBackground(UIConstants.BG_PANEL);
+        table.setBackground(UIConstants.BG_CARD);
         table.setForeground(UIConstants.TEXT_PRIMARY);
         table.setSelectionBackground(UIConstants.ACCENT_BLUE);
         table.setSelectionForeground(Color.WHITE);
@@ -182,7 +182,7 @@ public final class StyledComponents {
         table.setIntercellSpacing(new Dimension(0, 0));
 
         JTableHeader header = table.getTableHeader();
-        header.setBackground(UIConstants.BG_DARK);
+        header.setBackground(UIConstants.BG_BASE);
         header.setForeground(UIConstants.TEXT_SECONDARY);
         header.setFont(UIConstants.FONT_HEADING);
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER));
@@ -192,7 +192,7 @@ public final class StyledComponents {
             public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean focus, int row, int col) {
                 Component c = super.getTableCellRendererComponent(t, val, sel, focus, row, col);
                 if (!sel) {
-                    c.setBackground(row % 2 == 0 ? UIConstants.BG_PANEL : UIConstants.TABLE_ROW_ALT);
+                    c.setBackground(row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER);
                     c.setForeground(UIConstants.TEXT_PRIMARY);
                 }
                 setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
