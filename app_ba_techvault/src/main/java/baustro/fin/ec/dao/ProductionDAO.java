@@ -1,20 +1,20 @@
 package baustro.fin.ec.dao;
 
 import baustro.fin.ec.db.DatabaseManager;
-import baustro.fin.ec.model.Caso;
+import baustro.fin.ec.model.Production;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CasoDAO {
+public class ProductionDAO {
 
     private Connection getConn() {
         return DatabaseManager.getInstance().getConnection();
     }
 
-    public List<Caso> findAll() throws SQLException {
-        List<Caso> list = new ArrayList<>();
+    public List<Production> findAll() throws SQLException {
+        List<Production> list = new ArrayList<>();
         String sql = "SELECT * FROM correctivos ORDER BY created_at DESC";
         try (Statement stmt = getConn().createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -23,8 +23,8 @@ public class CasoDAO {
         return list;
     }
 
-    public List<Caso> search(String query) throws SQLException {
-        List<Caso> list = new ArrayList<>();
+    public List<Production> search(String query) throws SQLException {
+        List<Production> list = new ArrayList<>();
         String sql = "SELECT * FROM correctivos WHERE titulo LIKE ? OR numero_tarea LIKE ? OR servicio LIKE ? OR error_presentado LIKE ? ORDER BY created_at DESC";
         String q = "%" + query + "%";
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
@@ -37,7 +37,7 @@ public class CasoDAO {
         return list;
     }
 
-    public void insert(Caso c) throws SQLException {
+    public void insert(Production c) throws SQLException {
         String sql = """
             INSERT INTO correctivos (numero_tarea, titulo, descripcion, ambiente, servicio,
             error_presentado, solucion, estado, prioridad, fecha_reporte, fecha_solucion,
@@ -61,7 +61,7 @@ public class CasoDAO {
         }
     }
 
-    public void update(Caso c) throws SQLException {
+    public void update(Production c) throws SQLException {
         String sql = """
             UPDATE correctivos SET numero_tarea=?, titulo=?, descripcion=?, ambiente=?, servicio=?,
             error_presentado=?, solucion=?, estado=?, prioridad=?, fecha_reporte=?, fecha_solucion=?,
@@ -93,8 +93,8 @@ public class CasoDAO {
         }
     }
 
-    private Caso map(ResultSet rs) throws SQLException {
-        Caso c = new Caso();
+    private Production map(ResultSet rs) throws SQLException {
+        Production c = new Production();
         c.setId(rs.getInt("id"));
         c.setNumeroTarea(rs.getString("numero_tarea"));
         c.setTitulo(rs.getString("titulo"));
