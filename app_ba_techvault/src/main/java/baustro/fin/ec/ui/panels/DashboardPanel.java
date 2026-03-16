@@ -60,7 +60,7 @@ public class DashboardPanel extends JPanel {
         title.setFont(UIConstants.FONT_HEADER);
         title.setForeground(UIConstants.TEXT_BRIGHT);
         left.add(title);
-        left.add(makePill("EN VIVO", UIConstants.EMERALD));
+        left.add(makePill());
 
         // RIGHT: last update + refresh button
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
@@ -107,7 +107,7 @@ public class DashboardPanel extends JPanel {
     }
 
     private JButton createRefreshButton() {
-        JButton btn = new JButton("↪️ Actualizar") {
+        JButton btn = new JButton("↪ Actualizar") {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -172,7 +172,7 @@ public class DashboardPanel extends JPanel {
         JLabel lblCajasCerradas = heroValueLabel(UIConstants.AMBER);
         cajasGrid.add(buildHeroCard(
                 "Cajas Cerradas",
-                "Total Cierre de Cajas200",
+                "Total Cierre de Cajas",
                 UIConstants.AMBER,
                 lblCajasCerradas,
                 "○"
@@ -512,23 +512,23 @@ public class DashboardPanel extends JPanel {
         return bar;
     }
 
-    private JLabel makePill(String text, Color accent) {
+    private JLabel makePill() {
         JLabel pill = new JLabel() {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 18));
+                g2.setColor(new Color(UIConstants.EMERALD.getRed(), UIConstants.EMERALD.getGreen(), UIConstants.EMERALD.getBlue(), 18));
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), getHeight(), getHeight());
-                g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 80));
+                g2.setColor(new Color(UIConstants.EMERALD.getRed(), UIConstants.EMERALD.getGreen(), UIConstants.EMERALD.getBlue(), 80));
                 g2.setStroke(new BasicStroke(0.8f));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, getHeight(), getHeight());
                 super.paintComponent(g);
             }
         };
 
-        pill.setText("  ● " + text + "  ");
+        pill.setText("  ● " + "EN VIVO" + "  ");
         pill.setFont(UIConstants.FONT_PILL);
-        pill.setForeground(accent);
+        pill.setForeground(UIConstants.EMERALD);
         pill.setOpaque(false);
         pill.setBorder(new EmptyBorder(3, 4, 3, 4));
         return pill;
