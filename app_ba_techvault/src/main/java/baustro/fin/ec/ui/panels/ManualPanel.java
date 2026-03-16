@@ -120,7 +120,7 @@ public class ManualPanel extends JPanel {
                 new HeaderSearchFilter.ComboConfig("Tipo",
                         new String[]{"PDF", "DOCX", "XLSX", "PPTX", "TXT"}, "Todos"),
                 new HeaderSearchFilter.ComboConfig("Ordenar",
-                        new String[]{"Fecha", "Tamaño"}, "Nombre A-Z")
+                        new String[]{"Nombre Z-A","Fecha", "Tamaño"}, "Nombre A-Z")
         ).onChanged(this::applyFilters);
 
         styleSearchFilter(hsf);
@@ -316,10 +316,12 @@ public class ManualPanel extends JPanel {
         if (tipo != null && !tipo.equalsIgnoreCase("Todos") && !tipo.isBlank())
             stream = stream.filter(f -> getExtension(f.getName()).equalsIgnoreCase(tipo));
 
-        Comparator<File> cmp;
-        if ("Fecha".equals(sort))        cmp = Comparator.comparing(File::lastModified).reversed();
-        else if ("Tamaño".equals(sort))  cmp = Comparator.comparing(File::length).reversed();
-        else                             cmp = Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER);
+        Comparator<File> cmp = switch (sort) {
+            case "Fecha" -> Comparator.comparing(File::lastModified).reversed();
+            case "Tamaño" -> Comparator.comparing(File::length).reversed();
+            case "Nombre Z-A" -> Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER).reversed();
+            case null, default -> Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER);
+        };
 
         List<File> res = stream.sorted(cmp).toList();
         int idx = 1;

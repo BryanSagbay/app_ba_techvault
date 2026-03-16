@@ -96,7 +96,7 @@ public class NotaPanel extends JPanel {
         noteList.setSelectionBackground(UIConstants.ACCENT_BLUE);
         noteList.setSelectionForeground(Color.WHITE);
         noteList.setCellRenderer(noteCellRenderer());
-        noteList.setFixedCellHeight(52);
+        noteList.setFixedCellHeight(72);
         noteList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) openNota(noteList.getSelectedValue());
         });
@@ -151,32 +151,97 @@ public class NotaPanel extends JPanel {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object val, int idx, boolean sel, boolean focus) {
                 Nota nota = (Nota) val;
-                JPanel p = new JPanel(new BorderLayout(6, 2));
-                p.setBackground(sel ? UIConstants.ACCENT_BLUE : (idx % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER));
-                p.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
-                        BorderFactory.createEmptyBorder(8, 12, 8, 12)));
 
+                //  Colores base
+                Color bgColor  = sel ? UIConstants.ACCENT_BLUE
+                        : (idx % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER);
+                Color fgTitle  = sel ? Color.WHITE              : UIConstants.TEXT_BRIGHT;
+                Color fgPrev   = sel ? new Color(200, 220, 255) : UIConstants.TEXT_SECONDARY;
+                Color fgTag    = sel ? new Color(180, 230, 255) : UIConstants.TEAL_PRIMARY;
+                JPanel p = getJPanel(sel, bgColor);
+
+                //  Panel de texto (columna central)
+                JPanel textCol = new JPanel();
+                textCol.setLayout(new BoxLayout(textCol, BoxLayout.Y_AXIS));
+                textCol.setOpaque(false);
+
+                // Título
                 JLabel lTitle = new JLabel(nota.getTitulo());
                 lTitle.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD));
-                lTitle.setForeground(sel ? Color.WHITE : UIConstants.TEXT_PRIMARY);
+                lTitle.setForeground(fgTitle);
+                lTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-                String preview = nota.getContenido() != null ?
-                        nota.getContenido().replace("\n", " ").substring(0, Math.min(50, nota.getContenido().length())) + "..." : "";
+                // Preview del contenido — máximo 55 chars, sin saltos de línea
+                String raw = nota.getContenido() != null
+                        ? nota.getContenido().replaceAll("\\s+", " ").trim() : "";
+                String preview = raw.isEmpty() ? "Sin contenido"
+                        : (raw.length() > 55 ? raw.substring(0, 55) + "…" : raw);
                 JLabel lPrev = new JLabel(preview);
                 lPrev.setFont(UIConstants.FONT_SMALL);
-                lPrev.setForeground(sel ? new Color(200,220,255) : UIConstants.TEXT_MUTED);
+                lPrev.setForeground(fgPrev);
+                lPrev.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-                String tags = nota.getEtiquetas() != null ? "[tag] " + nota.getEtiquetas() : "";
-                JLabel lTags = new JLabel(tags);
-                lTags.setFont(UIConstants.FONT_SMALL);
-                lTags.setForeground(sel ? new Color(200,220,255) : UIConstants.ACCENT_CYAN);
+                textCol.add(lTitle);
+                textCol.add(Box.createVerticalStrut(3));
+                textCol.add(lPrev);
 
-                JPanel text = new JPanel(new GridLayout(2, 1, 0, 2));
-                text.setOpaque(false);
-                text.add(lTitle); text.add(lPrev);
-                p.add(text, BorderLayout.CENTER);
-                p.add(lTags, BorderLayout.SOUTH);
+                // Tags — solo si existen, como pills de texto en la parte inferior
+                if (nota.getEtiquetas() != null && !nota.getEtiquetas().isBlank()) {
+                    textCol.add(Box.createVerticalStrut(4));
+                    JPanel tagRow = getJPanel(sel, nota, fgTag);
+                    textCol.add(tagRow);
+                }
+
+                p.add(textCol, BorderLayout.CENTER);
+                return p;
+            }
+
+            private JPanel getJPanel(boolean sel, Nota nota, Color fgTag) {
+                JPanel tagRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+                tagRow.setOpaque(false);
+                tagRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+                // Dividir por coma y mostrar cada tag por separado
+                for (String tag : nota.getEtiquetas().split(",")) {
+                    String t = tag.trim();
+                    if (t.isEmpty()) continue;
+                    JLabel lt = getJLabel(sel, t, fgTag);
+                    tagRow.add(lt);
+                }
+                return tagRow;
+            }
+
+            private static JLabel getJLabel(boolean sel, String t, Color fgTag) {
+                JLabel lt = new JLabel("  " + t + "  ");
+                lt.setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD, 9f));
+                lt.setForeground(fgTag);
+                lt.setOpaque(false);
+                lt.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(fgTag.getRed(), fgTag.getGreen(), fgTag.getBlue(), sel ? 140 : 80), 1, true),
+                        BorderFactory.createEmptyBorder(1, 2, 1, 2)));
+                return lt;
+            }
+
+            private JPanel getJPanel(boolean sel, Color bgColor) {
+                Color accentBar= sel ? new Color(255,255,255,80): UIConstants.TEAL_PRIMARY;
+
+                //  Panel principal con barra de acento lateral custom
+                JPanel p = new JPanel(new BorderLayout(0, 0)) {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        // Barra de acento vertical izquierda de 3px
+                        Graphics2D g2 = (Graphics2D) g.create();
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        g2.setColor(accentBar);
+                        g2.fillRoundRect(0, 8, 3, getHeight() - 16, 3, 3);
+                        g2.dispose();
+                    }
+                };
+                p.setBackground(bgColor);
+                p.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER_SUBTLE),
+                        BorderFactory.createEmptyBorder(10, 14, 10, 12)));
                 return p;
             }
         };

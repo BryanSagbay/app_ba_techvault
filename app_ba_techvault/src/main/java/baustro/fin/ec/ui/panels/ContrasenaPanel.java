@@ -33,6 +33,9 @@ public class ContrasenaPanel extends JPanel {
     private HeaderSearchFilter hsf;
     private JLabel statsLabel;
     private List<Contrasena> allData = new ArrayList<>();
+    private static final String[] CATEGORIAS = {
+            "BD", "Servidor", "App", "VPN", "Email", "API", "Web", "Sistema"
+    };
 
     public ContrasenaPanel() {
         setLayout(new CardLayout());
@@ -184,10 +187,9 @@ public class ContrasenaPanel extends JPanel {
 
         titlePane.add(title); titlePane.add(btnLock);
 
-        String[] cats = {"BD", "Servidor", "App", "VPN", "Email", "API", "Web", "Sistema"};
         hsf = new HeaderSearchFilter(
                 "Buscar titulo, usuario, categoría...",
-                new HeaderSearchFilter.ComboConfig("Categoría", cats, "Todas"),
+                new HeaderSearchFilter.ComboConfig("Categoría", CATEGORIAS, "Todas"),
                 new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{"Titulo Z-A","Categoría"}, "Titulo A-Z")
         ).onChanged(this::applyFilters);
 
@@ -351,7 +353,13 @@ public class ContrasenaPanel extends JPanel {
         JTextField   fUser  = StyledComponents.styledTextField("usuario@dominio o nombre de usuario");
         JPasswordField fPass = StyledComponents.styledPasswordField();
         JTextField   fUrl   = StyledComponents.styledTextField("https://... o IP del servidor");
-        JTextField   fCat   = StyledComponents.styledTextField("BD, Servidor, App, VPN...");
+        JComboBox<String> fCat = new JComboBox<>(CATEGORIAS);
+        fCat.setBackground(UIConstants.BG_SURFACE);
+        fCat.setForeground(UIConstants.TEXT_PRIMARY);
+        fCat.setFont(UIConstants.FONT_BODY);
+        fCat.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIConstants.BORDER),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         JTextArea    fNotas = StyledComponents.styledTextArea(3, 20);
 
         JCheckBox showPw = new JCheckBox("Mostrar contrasena");
@@ -366,7 +374,7 @@ public class ContrasenaPanel extends JPanel {
             try { fPass.setText(EncryptionUtil.decrypt(existing.getContrasenaCifrada())); }
             catch (Exception ex) { fPass.setText(""); }
             fUrl.setText(existing.getUrl());
-            fCat.setText(existing.getCategoria());
+            fCat.setSelectedItem(existing.getCategoria());
             fNotas.setText(existing.getNotas());
         }
 
@@ -401,7 +409,7 @@ public class ContrasenaPanel extends JPanel {
                 c.setUsuario(fUser.getText().trim());
                 c.setContrasenaCifrada(EncryptionUtil.encrypt(pw));
                 c.setUrl(fUrl.getText().trim());
-                c.setCategoria(fCat.getText().trim());
+                c.setCategoria((String) fCat.getSelectedItem());
                 c.setNotas(fNotas.getText().trim());
                 if (existing == null) dao.insert(c); else dao.update(c);
                 loadData();

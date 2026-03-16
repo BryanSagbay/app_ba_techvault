@@ -72,7 +72,7 @@ public final class UIConstants {
     public static final String[] ESTADOS_SERVIDOR = {"Activo", "Inactivo", "Mantenimiento"};
 
     // SO
-    public static final String[] SISTEMAS_OPERATIVOS_CMD = {"Linux", "Windows", "Ambos"};
+    public static final String[] SISTEMAS_OPERATIVOS_CMD = {"Linux", "Windows"};
 
     private UIConstants() {}
 

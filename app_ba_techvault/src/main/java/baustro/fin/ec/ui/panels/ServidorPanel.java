@@ -35,6 +35,7 @@ public class ServidorPanel extends JPanel {
     }
 
     private void buildUI() {
+        //  HEADER: título + botones
         JPanel header = new JPanel(new BorderLayout(10,0));
         header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
@@ -49,23 +50,34 @@ public class ServidorPanel extends JPanel {
         if(ico!=null&&ico.getIconWidth()>1){title.setIcon(ico);title.setIconTextGap(8);}
         titlePane.add(title);
 
-        hsf = new HeaderSearchFilter(
-                "Buscar nombre, IP, tipo...",
-                new HeaderSearchFilter.ComboConfig("Tipo",     UIConstants.TIPOS_SERVIDOR,   "Todos"),
-//                new HeaderSearchFilter.ComboConfig("Ambiente", UIConstants.AMBIENTES,         "Todos"),
-//                new HeaderSearchFilter.ComboConfig("Estado",   UIConstants.ESTADOS_SERVIDOR,  "Todos"),
-                  new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"IP","Ambiente","Tipo"}, "Nombre A-Z")
-        ).onChanged(this::applyFilters);
+        JPanel headerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
+        headerButtons.setOpaque(false);
+        JButton btnNew    = StyledComponents.addButton("Nuevo");
+        JButton btnEdit   = StyledComponents.editButton("Editar");
+        JButton btnCopyIP = StyledComponents.copyButton("Copiar IP");
+        JButton btnDelete = StyledComponents.dangerButton("Eliminar");
+        btnNew.addActionListener(e -> openForm(null));
+        btnEdit.addActionListener(e -> editSelected());
+        btnCopyIP.addActionListener(e -> copyIP());
+        btnDelete.addActionListener(e -> deleteSelected());
+        headerButtons.add(btnNew);
+        headerButtons.add(btnEdit);
+        headerButtons.add(btnCopyIP);
+        headerButtons.add(btnDelete);
 
-        header.add(titlePane, BorderLayout.WEST);
-        header.add(hsf,       BorderLayout.EAST);
+        header.add(titlePane,     BorderLayout.WEST);
+        header.add(headerButtons, BorderLayout.EAST);
 
+        //  STATS BAR
         JPanel statsBar = new JPanel(new FlowLayout(FlowLayout.LEFT,6,4));
         statsBar.setBackground(UIConstants.BG_SURFACE);
         statsBar.setBorder(BorderFactory.createMatteBorder(0,0,1,0,UIConstants.BORDER));
-        statsLabel = new JLabel(); statsLabel.setFont(UIConstants.FONT_SMALL); statsLabel.setForeground(UIConstants.TEXT_MUTED);
+        statsLabel = new JLabel();
+        statsLabel.setFont(UIConstants.FONT_SMALL);
+        statsLabel.setForeground(UIConstants.TEXT_MUTED);
         statsBar.add(statsLabel);
 
+        //  TABLA
         String[] cols={"#","Nombre","IP / Host","Tipo","Ambiente","SO","Puerto","Estado"};
         tableModel=new DefaultTableModel(cols,0){public boolean isCellEditable(int r,int c){return false;}};
         table=new JTable(tableModel); StyledComponents.styleTable(table);
@@ -76,22 +88,30 @@ public class ServidorPanel extends JPanel {
         table.addMouseListener(new MouseAdapter(){
             public void mouseClicked(MouseEvent e){if(e.getClickCount()==2)editSelected();}});
 
-        JPanel bottom=new JPanel(new FlowLayout(FlowLayout.LEFT,8,8));
-        bottom.setBackground(UIConstants.BG_BASE);
-        JButton btnNew = StyledComponents.addButton("Nuevo");
-        btnNew.addActionListener(e->openForm(null));
-        JButton btnEdit   = StyledComponents.editButton("Editar");
-        JButton btnCopyIP = StyledComponents.copyButton("Copiar IP");
-        JButton btnDelete = StyledComponents.dangerButton("Eliminar");
-        btnEdit.addActionListener(e->editSelected());
-        btnCopyIP.addActionListener(e->copyIP());
-        btnDelete.addActionListener(e->deleteSelected());
-        bottom.add(btnNew);bottom.add(btnEdit);bottom.add(btnCopyIP);bottom.add(btnDelete);
+        //  BOTTOM: filtros
+        hsf = new HeaderSearchFilter(
+                "Buscar nombre, IP, tipo...",
+                new HeaderSearchFilter.ComboConfig("Tipo",     UIConstants.TIPOS_SERVIDOR,  "Todos"),
+                new HeaderSearchFilter.ComboConfig("Ambiente", UIConstants.AMBIENTES,        "Todos"),
+                new HeaderSearchFilter.ComboConfig("Estado",   UIConstants.ESTADOS_SERVIDOR, "Todos"),
+                new HeaderSearchFilter.ComboConfig("Ordenar",
+                        new String[]{"Nombre Z-A","IP A-Z","IP Z-A","Ambiente","Tipo"},
+                        "Nombre A-Z")
+        ).onChanged(this::applyFilters);
 
+        JPanel bottom = new JPanel(new BorderLayout());
+        bottom.setBackground(UIConstants.BG_BASE);
+        bottom.setBorder(BorderFactory.createEmptyBorder(6,10,6,10));
+        bottom.add(hsf, BorderLayout.CENTER);
+
+        //  ENSAMBLE
         JPanel center=new JPanel(new BorderLayout());
-        center.add(statsBar,BorderLayout.NORTH);
-        center.add(StyledComponents.darkScrollPane(table),BorderLayout.CENTER);
-        add(header,BorderLayout.NORTH); add(center,BorderLayout.CENTER); add(bottom,BorderLayout.SOUTH);
+        center.add(statsBar, BorderLayout.NORTH);
+        center.add(StyledComponents.darkScrollPane(table), BorderLayout.CENTER);
+
+        add(header, BorderLayout.NORTH);
+        add(center, BorderLayout.CENTER);
+        add(bottom, BorderLayout.SOUTH);
     }
 
     private DefaultTableCellRenderer estadoRenderer(){
@@ -114,19 +134,29 @@ public class ServidorPanel extends JPanel {
     }
 
     private void applyFilters(){
-        String q   = hsf.getQuery().toLowerCase();
-        String tipo= hsf.getFilter(0); String amb=hsf.getFilter(1);
-        String est = hsf.getFilter(2); String sort=hsf.getFilter(3);
-        Stream<Servidor> s=allData.stream();
-        if(!q.isEmpty())   s=s.filter(sv->nv(sv.getNombre(),q)||nv(sv.getIp(),q)||nv(sv.getDescripcion(),q));
-        if(!tipo.isEmpty())s=s.filter(sv->tipo.equals(sv.getTipo()));
-        if(!amb.isEmpty()) s=s.filter(sv->amb.equals(sv.getAmbiente()));
-        if(!est.isEmpty()) s=s.filter(sv->est.equals(sv.getEstado()));
-        Comparator<Servidor> cmp=switch(sort){
-            case "IP"        ->Comparator.comparing(sv->nvl(sv.getIp()));
-            case "Ambiente"  ->Comparator.comparing(sv->nvl(sv.getAmbiente()));
-            case "Tipo"      ->Comparator.comparing(sv->nvl(sv.getTipo()));
-            default          ->Comparator.comparing(sv->nvl(sv.getNombre()));
+        String q    = hsf.getQuery().toLowerCase();
+        String tipo = hsf.getFilter(0);  // índice 0 → Tipo
+        String amb  = hsf.getFilter(1);  // índice 1 → Ambiente
+        String est  = hsf.getFilter(2);  // índice 2 → Estado
+        String sort = hsf.getFilter(3);  // índice 3 → Ordenar
+
+        Stream<Servidor> s = allData.stream();
+
+        // Búsqueda por texto: nombre, IP, tipo, SO y descripción
+        if (!q.isEmpty())    s = s.filter(sv -> nv(sv.getNombre(),q) || nv(sv.getIp(),q)
+                || nv(sv.getTipo(),q)   || nv(sv.getSistemaOperativo(),q)
+                || nv(sv.getDescripcion(),q));
+        if (!tipo.isEmpty()) s = s.filter(sv -> tipo.equals(sv.getTipo()));
+        if (!amb.isEmpty())  s = s.filter(sv -> amb.equals(sv.getAmbiente()));
+        if (!est.isEmpty())  s = s.filter(sv -> est.equals(sv.getEstado()));
+
+        Comparator<Servidor> cmp = switch (sort) {
+            case "Nombre Z-A" -> Comparator.comparing((Servidor sv) -> nvl(sv.getNombre())).reversed();
+            case "IP A-Z"     -> Comparator.comparing(sv -> nvl(sv.getIp()));
+            case "IP Z-A"     -> Comparator.comparing((Servidor sv) -> nvl(sv.getIp())).reversed();
+            case "Ambiente"   -> Comparator.comparing(sv -> nvl(sv.getAmbiente()));
+            case "Tipo"       -> Comparator.comparing(sv -> nvl(sv.getTipo()));
+            default           -> Comparator.comparing(sv -> nvl(sv.getNombre())); // "Nombre A-Z"
         };
         List<Servidor> res=s.sorted(cmp).toList();
         tableModel.setRowCount(0);

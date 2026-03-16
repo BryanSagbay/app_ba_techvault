@@ -33,7 +33,7 @@ public class TransaccionPanel extends JPanel {
     }
 
     private void buildUI() {
-        // HEADER con filtros
+        //  HEADER: título + botones
         JPanel header = new JPanel(new BorderLayout(10, 0));
         header.setBackground(UIConstants.BG_CARD);
         header.setBorder(BorderFactory.createCompoundBorder(
@@ -49,16 +49,20 @@ public class TransaccionPanel extends JPanel {
         if (ico != null && ico.getIconWidth() > 1) { title.setIcon(ico); title.setIconTextGap(8); }
         titlePane.add(title);
 
-        hsf = new HeaderSearchFilter(
-                "Buscar TRX, subsistema, descripción...",
-                new HeaderSearchFilter.ComboConfig("Tipo",     TIPOS,                                                              "Todos"),
-                new HeaderSearchFilter.ComboConfig("Ordenar",  new String[]{"Subsistema", "Tipo", "Sub-transacción"},    "TRX A-Z")
-        ).onChanged(this::applyFilters);
+        JPanel headerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        headerButtons.setOpaque(false);
+        JButton btnNew    = StyledComponents.addButton("Nueva Transacción");
+        JButton btnEdit   = StyledComponents.editButton("Editar");
+        JButton btnDelete = StyledComponents.dangerButton("Eliminar");
+        btnNew.addActionListener(e -> openForm(null));
+        btnEdit.addActionListener(e -> editSelected());
+        btnDelete.addActionListener(e -> deleteSelected());
+        headerButtons.add(btnNew); headerButtons.add(btnEdit); headerButtons.add(btnDelete);
 
-        header.add(titlePane, BorderLayout.WEST);
-        header.add(hsf, BorderLayout.EAST);
+        header.add(titlePane,     BorderLayout.WEST);
+        header.add(headerButtons, BorderLayout.EAST);
 
-        // STATS BAR
+        //  STATS BAR
         JPanel statsBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         statsBar.setBackground(UIConstants.BG_SURFACE);
         statsBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER));
@@ -67,7 +71,7 @@ public class TransaccionPanel extends JPanel {
         statsLabel.setForeground(UIConstants.TEXT_MUTED);
         statsBar.add(statsLabel);
 
-        // TABLA
+        //  TABLA
         String[] cols = {"#", "TRX", "Subsistema", "Sub-transacción", "Tipo", "Descripción"};
         tableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
@@ -85,21 +89,26 @@ public class TransaccionPanel extends JPanel {
             public void mouseClicked(MouseEvent e) { if (e.getClickCount() == 2) editSelected(); }
         });
 
-        // CENTRO
+        //  BOTTOM: filtros
+        hsf = new HeaderSearchFilter(
+                "Buscar trx, subsistema, descripción...",
+                new HeaderSearchFilter.ComboConfig("Tipo",    TIPOS,
+                        "Todos"),
+                new HeaderSearchFilter.ComboConfig("Ordenar", new String[]{
+                        "TRX Z-A", "Subsistema A-Z", "Subsistema Z-A",
+                        "Sub-transacción", "Tipo"},
+                        "TRX A-Z")
+        ).onChanged(this::applyFilters);
+
+        JPanel bottom = new JPanel(new BorderLayout());
+        bottom.setBackground(UIConstants.BG_BASE);
+        bottom.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+        bottom.add(hsf, BorderLayout.CENTER);
+
+        // ENSAMBLE
         JPanel center = new JPanel(new BorderLayout());
         center.add(statsBar, BorderLayout.NORTH);
         center.add(StyledComponents.darkScrollPane(table), BorderLayout.CENTER);
-
-        // BOTTOM
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-        bottom.setBackground(UIConstants.BG_BASE);
-        JButton btnNew    = StyledComponents.addButton("Nueva Transaccion");
-        JButton btnEdit   = StyledComponents.editButton("Editar");
-        JButton btnDelete = StyledComponents.dangerButton("Eliminar");
-        btnNew.addActionListener(e -> openForm(null));
-        btnEdit.addActionListener(e -> editSelected());
-        btnDelete.addActionListener(e -> deleteSelected());
-        bottom.add(btnNew); bottom.add(btnEdit); bottom.add(btnDelete);
 
         add(header, BorderLayout.NORTH);
         add(center, BorderLayout.CENTER);
@@ -132,19 +141,21 @@ public class TransaccionPanel extends JPanel {
 
     private void applyFilters() {
         String q    = hsf.getQuery().toLowerCase();
-        String tipo = hsf.getFilter(0);
-        String sort = hsf.getFilter(1);
+        String tipo = hsf.getFilter(0);  // índice 0 → Tipo
+        String sort = hsf.getFilter(1);  // índice 1 → Ordenar
 
         Stream<Transaccion> s = allData.stream();
         if (!q.isEmpty())    s = s.filter(t -> nv(t.getTrx(), q) || nv(t.getSubsistema(), q)
-                                             || nv(t.getSubtransaccion(), q) || nv(t.getDescripcion(), q));
+                || nv(t.getSubtransaccion(), q) || nv(t.getDescripcion(), q));
         if (!tipo.isEmpty()) s = s.filter(t -> tipo.equals(t.getTipo()));
 
         Comparator<Transaccion> cmp = switch (sort) {
-            case "Subsistema"      -> Comparator.comparing(t -> nvl(t.getSubsistema()));
-            case "Tipo"            -> Comparator.comparing(t -> nvl(t.getTipo()));
+            case "TRX Z-A"          -> Comparator.comparing((Transaccion t) -> nvl(t.getTrx())).reversed();
+            case "Subsistema A-Z"   -> Comparator.comparing(t -> nvl(t.getSubsistema()));
+            case "Subsistema Z-A"   -> Comparator.comparing((Transaccion t) -> nvl(t.getSubsistema())).reversed();
             case "Sub-transacción"  -> Comparator.comparing(t -> nvl(t.getSubtransaccion()));
-            default                -> Comparator.comparing(t -> nvl(t.getTrx()));
+            case "Tipo"             -> Comparator.comparing(t -> nvl(t.getTipo()));
+            default                 -> Comparator.comparing(t -> nvl(t.getTrx())); // "TRX A-Z"
         };
 
         List<Transaccion> res = s.sorted(cmp).toList();
@@ -154,10 +165,9 @@ public class TransaccionPanel extends JPanel {
             tableModel.addRow(new Object[]{i++, t.getTrx(), t.getSubsistema(),
                     t.getSubtransaccion(), t.getTipo(), t.getDescripcion()});
 
-        // Stats por tipo
-        long mant  = res.stream().filter(t -> "Mantenimiento".equals(t.getTipo())).count();
-        long cons  = res.stream().filter(t -> "Consulta".equals(t.getTipo())).count();
-        long msg   = res.stream().filter(t -> "Mensaje".equals(t.getTipo())).count();
+        long mant = res.stream().filter(t -> "Mantenimiento".equals(t.getTipo())).count();
+        long cons = res.stream().filter(t -> "Consulta".equals(t.getTipo())).count();
+        long msg  = res.stream().filter(t -> "Mensaje".equals(t.getTipo())).count();
         statsLabel.setText(String.format(
                 "  Total: %d   |   Mantenimiento: %d   |   Consulta: %d   |   Mensaje: %d",
                 res.size(), mant, cons, msg));
@@ -170,9 +180,6 @@ public class TransaccionPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0) { JOptionPane.showMessageDialog(this, "Seleccione una transacción."); return null; }
         String trx = (String) tableModel.getValueAt(row, 1);
-        // Usar el índice # para encontrar la correcta
-        tableModel.getValueAt(row, 0);
-        // Filtrar igual que applyFilters y tomar el elemento en esa position
         return allData.stream().filter(t -> trx.equals(t.getTrx())).findFirst().orElse(null);
     }
 
@@ -180,7 +187,7 @@ public class TransaccionPanel extends JPanel {
 
     private void deleteSelected() {
         Transaccion t = getSelected(); if (t == null) return;
-        int ok = JOptionPane.showConfirmDialog(this, "Eliminar transaccion [" + t.getTrx() + "]?",
+        int ok = JOptionPane.showConfirmDialog(this, "¿Eliminar transacción [" + t.getTrx() + "]?",
                 "Confirmar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (ok == JOptionPane.YES_OPTION) {
             try { dao.delete(t.getId()); loadData(); }
@@ -190,7 +197,7 @@ public class TransaccionPanel extends JPanel {
 
     private void openForm(Transaccion existing) {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
-                existing == null ? "Nueva Transaccion" : "Editar Transaccion", true);
+                existing == null ? "Nueva Transacción" : "Editar Transacción", true);
         d.setSize(560, 400); d.setLocationRelativeTo(this);
         d.getContentPane().setBackground(UIConstants.BG_CARD);
         d.setLayout(new BorderLayout());
@@ -201,11 +208,11 @@ public class TransaccionPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(6, 6, 6, 6);
 
-        JTextField fTrx     = StyledComponents.styledTextField("Ej: 0200, CB01...");
-        JTextField fSubsis  = StyledComponents.styledTextField("Ej: CORE, ATM, WEB...");
-        JTextField fSubtrx  = StyledComponents.styledTextField("Codigo o nombre de sub-transacción");
-        JComboBox<String> fTipo = StyledComponents.styledCombo(TIPOS);
-        JTextArea  fDesc    = StyledComponents.styledTextArea(5, 40);
+        JTextField        fTrx    = StyledComponents.styledTextField("Ej: 0200, CB01...");
+        JTextField        fSubsis = StyledComponents.styledTextField("Ej: CORE, ATM, WEB...");
+        JTextField        fSubtrx = StyledComponents.styledTextField("Código o nombre de sub-transacción");
+        JComboBox<String> fTipo   = StyledComponents.styledCombo(TIPOS);
+        JTextArea         fDesc   = StyledComponents.styledTextArea(5, 40);
 
         if (existing != null) {
             fTrx.setText(existing.getTrx());
@@ -216,9 +223,9 @@ public class TransaccionPanel extends JPanel {
         }
 
         int r = 0;
-        ar(form, gbc, r++, "TRX *",          fTrx,    "Subsistema",    fSubsis);
-        ar(form, gbc, r++, "Sub-transacción",  fSubtrx, "Tipo",          fTipo);
-        af(form, gbc, r, new JScrollPane(fDesc));
+        ar(form, gbc, r++, "TRX *",           fTrx,    "Subsistema",   fSubsis);
+        ar(form, gbc, r++, "Sub-transacción",  fSubtrx, "Tipo",         fTipo);
+        af(form, gbc, r,   new JScrollPane(fDesc));
 
         JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
         bp.setBackground(UIConstants.BG_BASE);

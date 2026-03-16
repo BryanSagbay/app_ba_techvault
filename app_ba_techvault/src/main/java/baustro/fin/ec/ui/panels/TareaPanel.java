@@ -65,7 +65,7 @@ public class TareaPanel extends JPanel {
         JButton btnNew = StyledComponents.addButton("Nueva");
         JButton btnEdit = StyledComponents.editButton("Editar");
         JButton btnDelete = StyledComponents.dangerButton("Eliminar");
-        JButton btnProgress = StyledComponents.primaryButton("En Progreso",UIConstants.ACCENT_ORANGE);
+        JButton btnProgress = StyledComponents.iconTextButton("En Progreso", IconManager.ICON_REFRESH, UIConstants.ACCENT_ORANGE);
         JButton btnDone = StyledComponents.successButton("Completada");
 
         btnNew.addActionListener(e->openForm(null));
@@ -208,12 +208,15 @@ public class TareaPanel extends JPanel {
         if(!vence.isEmpty()){
             s=s.filter(t->{
                 if(t.getFechaLimite()==null||t.getFechaLimite().isEmpty())return false;
-                try{LocalDate fd=LocalDate.parse(t.getFechaLimite());
+                try{LocalDate fd=LocalDate.parse(t.getFechaLimite().trim());
                     return switch(vence){
-                        case "Hoy"         ->fd.isEqual(hoy);
-                        case "Esta semana" ->!fd.isBefore(hoy)&&fd.isBefore(hoy.plusDays(7));
-                        case "Vencidas"    ->fd.isBefore(hoy)&&!"Completada".equals(t.getEstado());
-                        default            ->true;
+                        // Hoy: exactamente hoy
+                        case "Hoy"         -> fd.isEqual(hoy);
+                        // Esta semana: desde hoy hasta 6 días adelante (inclusive ambos extremos)
+                        case "Esta semana" -> !fd.isBefore(hoy) && !fd.isAfter(hoy.plusDays(6));
+                        // Vencidas: fecha <= ayer, sin importar si es hoy o antes, y no completada
+                        case "Vencidas"    -> fd.isBefore(hoy) && !"Completada".equals(t.getEstado());
+                        default            -> true;
                     };
                 }catch(Exception e){return false;}
             });
@@ -261,29 +264,68 @@ public class TareaPanel extends JPanel {
 
     private void openForm(Tarea existing){
         JDialog d=new JDialog((Frame)SwingUtilities.getWindowAncestor(this),existing==null?"Nueva Tarea":"Editar Tarea",true);
-        d.setSize(520,420);d.setLocationRelativeTo(this);d.getContentPane().setBackground(UIConstants.BG_CARD);d.setLayout(new BorderLayout());
+        d.setSize(520,440);d.setLocationRelativeTo(this);d.getContentPane().setBackground(UIConstants.BG_CARD);d.setLayout(new BorderLayout());
         JPanel form=new JPanel(new GridBagLayout());form.setBackground(UIConstants.BG_CARD);form.setBorder(BorderFactory.createEmptyBorder(20,24,10,24));
         GridBagConstraints gbc=new GridBagConstraints();gbc.fill=GridBagConstraints.HORIZONTAL;gbc.insets=new Insets(6,6,6,6);
+
         JTextField fTit=StyledComponents.styledTextField("Descripción de la tarea");
         JComboBox<String> fPri=StyledComponents.styledCombo(UIConstants.PRIORIDADES);
         JComboBox<String> fEst=StyledComponents.styledCombo(UIConstants.ESTADOS_TAREA);
-        JTextField fFecha=StyledComponents.styledTextField("yyyy-mm-dd");
         JTextField fCat=StyledComponents.styledTextField("Correctivo, Deploy, Reunion...");
         JTextArea fDesc=StyledComponents.styledTextArea(5,20);
-        if(existing!=null){fTit.setText(existing.getTitulo());sc(fPri,existing.getPrioridad());sc(fEst,existing.getEstado());fFecha.setText(existing.getFechaLimite());fCat.setText(existing.getCategoria());fDesc.setText(existing.getDescripcion());}
+
+        // Spinner de fecha con formato yyyy-MM-dd
+        SpinnerDateModel dateModel = new SpinnerDateModel();
+        JSpinner fFecha = new JSpinner(dateModel);
+        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(fFecha, "yyyy-MM-dd");
+        fFecha.setEditor(dateEditor);
+        fFecha.setBackground(UIConstants.BG_SURFACE);
+        fFecha.setForeground(UIConstants.TEXT_PRIMARY);
+        fFecha.setFont(UIConstants.FONT_BODY);
+        fFecha.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIConstants.BORDER),
+                BorderFactory.createEmptyBorder(4, 6, 4, 6)));
+        dateEditor.getTextField().setBackground(UIConstants.BG_SURFACE);
+        dateEditor.getTextField().setForeground(UIConstants.TEXT_PRIMARY);
+        dateEditor.getTextField().setFont(UIConstants.FONT_BODY);
+        dateEditor.getTextField().setCaretColor(UIConstants.TEXT_PRIMARY);
+        dateEditor.getTextField().setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+
+        if(existing!=null){
+            fTit.setText(existing.getTitulo());
+            sc(fPri,existing.getPrioridad());
+            sc(fEst,existing.getEstado());
+            fCat.setText(existing.getCategoria());
+            fDesc.setText(existing.getDescripcion());
+            // Cargar fecha existente en el spinner
+            if(existing.getFechaLimite()!=null && !existing.getFechaLimite().isBlank()){
+                try{
+                    LocalDate ld = LocalDate.parse(existing.getFechaLimite().trim());
+                    fFecha.setValue(java.sql.Date.valueOf(ld));
+                }catch(Exception ignored){}
+            }
+        }
+
         int r=0;
         ar(form,gbc,r++,"Titulo *",fTit,"Categoría",fCat);
         ar(form,gbc,r++,"Prioridad",fPri,"Estado",fEst);
-        ar(form,gbc,r++,"Fecha Limite",fFecha,null,null);
+        ar(form,gbc,r++,"Fecha Límite",fFecha,null,null);
         af(form,gbc,r, new JScrollPane(fDesc));
+
         JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,10));bp.setBackground(UIConstants.BG_BASE);
         JButton bS=StyledComponents.successButton("Guardar");JButton bC=StyledComponents.cancelButton("Cancelar");
         bC.addActionListener(e->d.dispose());
         bS.addActionListener(e->{
             if(fTit.getText().trim().isEmpty()){JOptionPane.showMessageDialog(d,"Titulo obligatorio.");return;}
             Tarea t=existing!=null?existing:new Tarea();
-            t.setTitulo(fTit.getText().trim());t.setPrioridad((String)fPri.getSelectedItem());t.setEstado((String)fEst.getSelectedItem());
-            t.setFechaLimite(fFecha.getText().trim());t.setCategoria(fCat.getText().trim());t.setDescripcion(fDesc.getText().trim());
+            t.setTitulo(fTit.getText().trim());
+            t.setPrioridad((String)fPri.getSelectedItem());
+            t.setEstado((String)fEst.getSelectedItem());
+            t.setCategoria(fCat.getText().trim());
+            t.setDescripcion(fDesc.getText().trim());
+            // Leer fecha del spinner y guardar como yyyy-MM-dd
+            java.util.Date selDate = (java.util.Date) fFecha.getValue();
+            t.setFechaLimite(new java.text.SimpleDateFormat("yyyy-MM-dd").format(selDate));
             try{if(existing==null)dao.insert(t);else dao.update(t);loadData();d.dispose();}
             catch(Exception ex){JOptionPane.showMessageDialog(d,"Error: "+ex.getMessage());}
         });
