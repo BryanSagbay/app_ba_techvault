@@ -34,4 +34,14 @@ public class CajaService {
 
         return jdbc.queryForList(sql);
     }
+
+    // SELECT 3 → cajas faltantes
+    public List<Map<String,Object>> cajasFaltantes(){
+
+        String sql = """
+        consulta3
+        """;
+
+        return jdbc.queryForList(sql);
+    }
 }
