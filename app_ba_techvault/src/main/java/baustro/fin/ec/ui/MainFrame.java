@@ -112,10 +112,10 @@ public class MainFrame extends JFrame {
             case PANEL_DASHBOARD  -> new DashboardPanel();
             case PANEL_SERVIDOR   -> new ServidorPanel();
             case PANEL_PASSWORD   -> new ContrasenaPanel();
-            case PANEL_TAREA      -> new TareaPanel();
+            case PANEL_TAREA      -> new ProductionPanel();
             case PANEL_NOTA       -> new NotaPanel();
             case PANEL_COMANDO    -> new ComandoPanel();
-            case PANEL_PRODUCTION -> new ProductionPanel();
+            case PANEL_PRODUCTION -> new TareaPanel();
             case PANEL_MANUAL -> new ManualPanel();
             case PANEL_TRANSACCION -> new TransaccionPanel();
             case PANEL_EMERGENTE   -> new EmergentePanel();
@@ -161,7 +161,7 @@ public class MainFrame extends JFrame {
         setNavActive(btnDash, true);
 
         sidebar.add(sectionLabel("HERRAMIENTAS"));
-        sidebar.add(navButton("Tareas", IconManager.ICON_TAREA, PANEL_TAREA));
+        sidebar.add(navButton("Tareas", IconManager.ICON_TAREA, PANEL_PRODUCTION));
         sidebar.add(navButton("Notas", IconManager.ICON_NOTA, PANEL_NOTA));
         sidebar.add(navButton("Contraseñas", IconManager.ICON_PASSWORD, PANEL_PASSWORD));
 
@@ -171,7 +171,7 @@ public class MainFrame extends JFrame {
         sidebar.add(navButton("Transacciones", IconManager.ICON_TRX, PANEL_TRANSACCION));
 
         sidebar.add(sectionLabel("DOCUMENTACIÓN"));
-        sidebar.add(navButton("Producción", IconManager.ICON_CORRECTIVO, PANEL_PRODUCTION));
+        sidebar.add(navButton("Producción", IconManager.ICON_CORRECTIVO, PANEL_TAREA));
         sidebar.add(navButton("Manuales", IconManager.ICON_MANUAL, PANEL_MANUAL));
         sidebar.add(navButton("Emergentes", IconManager.ICON_AZURE, PANEL_EMERGENTE));
 
