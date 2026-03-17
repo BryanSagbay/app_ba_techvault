@@ -71,9 +71,6 @@ public class DashboardPanel extends JPanel {
         lblLastUpdate.setForeground(UIConstants.TEXT_DIM);
         right.add(lblLastUpdate);
 
-        JButton btnRefresh = createRefreshButton();
-        right.add(btnRefresh);
-
         header.add(left, BorderLayout.WEST);
         header.add(right, BorderLayout.EAST);
         return header;
@@ -106,38 +103,6 @@ public class DashboardPanel extends JPanel {
         return header;
     }
 
-    private JButton createRefreshButton() {
-        JButton btn = new JButton("↪ Actualizar") {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color bg = getModel().isRollover()
-                        ? new Color(UIConstants.TEAL_PRIMARY.getRed(), UIConstants.TEAL_PRIMARY.getGreen(), UIConstants.TEAL_PRIMARY.getBlue(), 20)
-                        : new Color(0, 0, 0, 0);
-                g2.setColor(bg);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                Color border = getModel().isRollover() ? UIConstants.TEAL_PRIMARY : UIConstants.BORDER_ACTIVE;
-                g2.setColor(border);
-                g2.setStroke(new BasicStroke(1f));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        btn.setFont(UIConstants.FONT_BTN);
-        btn.setForeground(UIConstants.TEXT_MID);
-        btn.setOpaque(false);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setBorder(new EmptyBorder(6, 14, 6, 14));
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.addMouseListener(new MouseAdapter() {
-            @Override public void mouseEntered(MouseEvent e) { btn.setForeground(UIConstants.TEAL_PRIMARY); btn.repaint(); }
-            @Override public void mouseExited(MouseEvent e)  { btn.setForeground(UIConstants.TEXT_MID);    btn.repaint(); }
-        });
-        btn.addActionListener(e -> refreshAll());
-        return btn;
-    }
 
     //  CONTENT
     private JPanel buildContent() {
