@@ -78,7 +78,7 @@ public class ServidorPanel extends JPanel {
         statsBar.add(statsLabel);
 
         //  TABLA
-        String[] cols={"#","Nombre","IP / Host","Tipo","Ambiente","SO","Puerto","Estado"};
+        String[] cols={"#","Host","IP","Tipo","Ambiente","SO","Puerto","Estado"};
         tableModel=new DefaultTableModel(cols,0){public boolean isCellEditable(int r,int c){return false;}};
         table=new JTable(tableModel); StyledComponents.styleTable(table);
         int[]w={40,160,130,100,90,80,60,90};
@@ -90,7 +90,7 @@ public class ServidorPanel extends JPanel {
 
         //  BOTTOM: filtros
         hsf = new HeaderSearchFilter(
-                "Buscar nombre, IP, tipo...",
+                "Buscar host, IP, tipo...",
                 new HeaderSearchFilter.ComboConfig("Tipo",     UIConstants.TIPOS_SERVIDOR,  "Todos"),
                 new HeaderSearchFilter.ComboConfig("Ambiente", UIConstants.AMBIENTES,        "Todos"),
                 new HeaderSearchFilter.ComboConfig("Estado",   UIConstants.ESTADOS_SERVIDOR, "Todos"),
@@ -208,7 +208,7 @@ public class ServidorPanel extends JPanel {
             fPuerto.setText(existing.getPuerto());fUser.setText(existing.getUsuarioAcceso());
             sc(fEst,existing.getEstado());fDesc.setText(existing.getDescripcion());fNotas.setText(existing.getNotas());}
         int r=0;
-        ar(form,gbc,r++,"Nombre *",fNom,"IP / Host *",fIp);ar(form,gbc,r++,"Tipo",fTipo,"Ambiente",fAmb);
+        ar(form,gbc,r++,"Host*",fNom,"IP *",fIp);ar(form,gbc,r++,"Tipo",fTipo,"Ambiente",fAmb);
         ar(form,gbc,r++,"Sistema Operativo",fSO,"Puerto",fPuerto);ar(form,gbc,r++,"Usuario Acceso",fUser,"Estado",fEst);
         af(form,gbc,r++,"Descripción",new JScrollPane(fDesc));af(form,gbc,r,"Notas",new JScrollPane(fNotas));
         JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,10));bp.setBackground(UIConstants.BG_BASE);
