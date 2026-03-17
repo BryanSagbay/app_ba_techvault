@@ -17,8 +17,8 @@ public class Main {
             catch (Exception ignored) {}
         }
 
-        UIManager.put("OptionPane.background",        new Color(36, 45, 61));
-        UIManager.put("Panel.background",             new Color(36, 45, 61));
+        UIManager.put("OptionPane.background", new Color(36, 45, 61));
+        UIManager.put("Panel.background", new Color(36, 45, 61));
         UIManager.put("OptionPane.messageForeground", new Color(241, 245, 249));
         UIManager.put("Button.arc",  8);
         UIManager.put("Component.arc", 6);
