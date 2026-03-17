@@ -30,6 +30,6 @@ public class CajasController {
 
     @GetMapping("/cajasFaltantes")
     public List<Map<String,Object>> cajasFaltantes(){
-        return service.cajasCerradas();
+        return service.cajasFaltantes();
     }
 }
