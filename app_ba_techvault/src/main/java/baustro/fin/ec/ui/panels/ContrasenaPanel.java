@@ -266,7 +266,7 @@ public class ContrasenaPanel extends JPanel {
         String cat  = hsf.getFilter(0);
         String sort = hsf.getFilter(1);
         Stream<Contrasena> s = allData.stream();
-        if (!q.isEmpty())   s = s.filter(c -> nv(c.getTitulo(), q) || nv(c.getUsuario(), q) || nv(c.getCategoria(), q));
+        if (!q.isEmpty())   s = s.filter(c -> nv(c.getTitulo(), q) || nv(c.getUsuario(), q) || nv(c.getCategoria(), q) || nv(c.getUrl(), q));
         if (!cat.isEmpty()) s = s.filter(c -> cat.equals(c.getCategoria()));
         Comparator<Contrasena> cmp = switch (sort) {
             case "Categoría"  -> Comparator.comparing(c -> nvl(c.getCategoria()));
