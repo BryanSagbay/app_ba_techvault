@@ -27,4 +27,9 @@ public class CajasController {
     public List<Map<String,Object>> cerradas(){
         return service.cajasCerradas();
     }
+
+    @GetMapping("/cajasFaltantes")
+    public List<Map<String,Object>> cajasFaltantes(){
+        return service.cajasCerradas();
+    }
 }
