@@ -67,7 +67,7 @@ public class DatabaseManager {
         String[] ddl = {
             // CORRECTIVOS / INCIDENCIAS
             """
-            CREATE TABLE IF NOT EXISTS correctivos (
+            CREATE TABLE IF NOT EXISTS tareas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 numero_tarea TEXT NOT NULL,
                 titulo TEXT NOT NULL,
@@ -90,7 +90,7 @@ public class DatabaseManager {
             """
             CREATE TABLE IF NOT EXISTS servidores (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nombre TEXT NOT NULL,
+                host TEXT NOT NULL,
                 ip TEXT NOT NULL,
                 tipo TEXT,
                 ambiente TEXT,
@@ -110,7 +110,7 @@ public class DatabaseManager {
                 titulo TEXT NOT NULL,
                 usuario TEXT,
                 contrasena_enc TEXT NOT NULL,
-                url TEXT,
+                ip TEXT,
                 categoria TEXT,
                 notas TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -119,7 +119,7 @@ public class DatabaseManager {
             """,
             // TAREAS TO-DO
             """
-            CREATE TABLE IF NOT EXISTS tareas (
+            CREATE TABLE IF NOT EXISTS produccion (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 titulo TEXT NOT NULL,
                 descripcion TEXT,
