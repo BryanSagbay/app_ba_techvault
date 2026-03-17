@@ -205,7 +205,7 @@ public class ContrasenaPanel extends JPanel {
         statsBar.add(statsLabel);
 
         // Table
-        String[] cols = {"#", "Titulo", "Usuario", "Categoría", "URL"};
+        String[] cols = {"#", "Titulo", "Usuario", "Categoría", "IP"};
         tableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -383,7 +383,7 @@ public class ContrasenaPanel extends JPanel {
         row2(form, gbc, r++, "Usuario", fUser);
         row2(form, gbc, r++, "Contrasena *", fPass);
         gbc.gridy = r++ * 2; gbc.gridx = 0; gbc.gridwidth = 2; form.add(showPw, gbc);
-        row2(form, gbc, r++, "URL / Sistema", fUrl);
+        row2(form, gbc, r++, "Ip", fUrl);
         row2(form, gbc, r++, "Categoría", fCat);
         row2(form, gbc, r, "Notas", new JScrollPane(fNotas));
 
