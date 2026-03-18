@@ -205,7 +205,7 @@ public class DashboardPanel extends JPanel {
         JLabel lblTotal = statLabel(UIConstants.INDIGO);
         corrGrid.add(buildStatCard("Total Registrados", "Correctivos en sistema", UIConstants.INDIGO, lblTotal));
         Runnable t1 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM correctivos");
+            int v = queryInt("SELECT COUNT(*) FROM tareas");
             SwingUtilities.invokeLater(() -> lblTotal.setText(String.valueOf(v)));
         };
         refreshTasks.add(t1); t1.run();
@@ -213,7 +213,7 @@ public class DashboardPanel extends JPanel {
         JLabel lblOpen = statLabel(UIConstants.ROSE);
         corrGrid.add(buildStatCard("Abiertos", "Pendientes de atención", UIConstants.ROSE, lblOpen));
         Runnable t2 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM correctivos WHERE estado='Abierto'");
+            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='Abierto'");
             SwingUtilities.invokeLater(() -> lblOpen.setText(String.valueOf(v)));
         };
         refreshTasks.add(t2); t2.run();
@@ -221,7 +221,7 @@ public class DashboardPanel extends JPanel {
         JLabel lblProg = statLabel(UIConstants.AMBER);
         corrGrid.add(buildStatCard("En Progreso", "Atención en curso", UIConstants.AMBER, lblProg));
         Runnable t3 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM correctivos WHERE estado='En Progreso'");
+            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='En Progreso'");
             SwingUtilities.invokeLater(() -> lblProg.setText(String.valueOf(v)));
         };
         refreshTasks.add(t3); t3.run();
@@ -230,7 +230,7 @@ public class DashboardPanel extends JPanel {
         corrGrid.add(buildStatCard("Resueltos Hoy", "Cerrados en el día", UIConstants.EMERALD, lblDone));
         Runnable t4 = () -> {
             String hoy = LocalDate.now().toString();
-            int v = queryInt("SELECT COUNT(*) FROM correctivos WHERE estado='Resuelto' AND fecha_solucion LIKE '%" + hoy + "%'");
+            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='Resuelto' AND fecha_solucion LIKE '%" + hoy + "%'");
             SwingUtilities.invokeLater(() -> lblDone.setText(String.valueOf(v)));
         };
         refreshTasks.add(t4); t4.run();
