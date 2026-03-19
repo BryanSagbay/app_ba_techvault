@@ -9,27 +9,21 @@ import java.util.List;
 
 public class ProductionDAO {
 
-    private Connection getConn() {
-        return DatabaseManager.getInstance().getConnection();
-    }
+    private Connection getConn() { return DatabaseManager.getInstance().getConnection(); }
 
     public List<Production> findAll() throws SQLException {
         List<Production> list = new ArrayList<>();
-        String sql = "SELECT * FROM correctivos ORDER BY created_at DESC";
         try (Statement stmt = getConn().createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             ResultSet rs = stmt.executeQuery("SELECT * FROM produccion ORDER BY CASE prioridad WHEN 'Alta' THEN 1 WHEN 'Media' THEN 2 ELSE 3 END, fecha_limite")) {
             while (rs.next()) list.add(map(rs));
         }
         return list;
     }
 
-    public List<Production> search(String query) throws SQLException {
+    public List<Production> findByEstado(String estado) throws SQLException {
         List<Production> list = new ArrayList<>();
-        String sql = "SELECT * FROM correctivos WHERE titulo LIKE ? OR numero_tarea LIKE ? OR servicio LIKE ? OR error_presentado LIKE ? ORDER BY created_at DESC";
-        String q = "%" + query + "%";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
-            ps.setString(1, q); ps.setString(2, q);
-            ps.setString(3, q); ps.setString(4, q);
+        try (PreparedStatement ps = getConn().prepareStatement("SELECT * FROM produccion WHERE estado=? ORDER BY fecha_limite")) {
+            ps.setString(1, estado);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(map(rs));
             }
@@ -37,78 +31,39 @@ public class ProductionDAO {
         return list;
     }
 
-    public void insert(Production c) throws SQLException {
-        String sql = """
-            INSERT INTO correctivos (numero_tarea, titulo, descripcion, ambiente, servicio,
-            error_presentado, solucion, estado, prioridad, fecha_reporte, fecha_solucion,
-            responsable, observaciones) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """;
+    public void insert(Production t) throws SQLException {
+        String sql = "INSERT INTO produccion (titulo, descripcion, prioridad, estado, fecha_limite, categoria) VALUES (?,?,?,?,?,?)";
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
-            ps.setString(1, c.getNumeroTarea());
-            ps.setString(2, c.getTitulo());
-            ps.setString(3, c.getDescripcion());
-            ps.setString(4, c.getAmbiente());
-            ps.setString(5, c.getServicio());
-            ps.setString(6, c.getErrorPresentado());
-            ps.setString(7, c.getSolucion());
-            ps.setString(8, c.getEstado());
-            ps.setString(9, c.getPrioridad());
-            ps.setString(10, c.getFechaReporte());
-            ps.setString(11, c.getFechaSolucion());
-            ps.setString(12, c.getResponsable());
-            ps.setString(13, c.getObservaciones());
+            ps.setString(1, t.getTitulo()); ps.setString(2, t.getDescripcion());
+            ps.setString(3, t.getPrioridad()); ps.setString(4, t.getEstado());
+            ps.setString(5, t.getFechaLimite()); ps.setString(6, t.getCategoria());
             ps.executeUpdate();
         }
     }
 
-    public void update(Production c) throws SQLException {
-        String sql = """
-            UPDATE correctivos SET numero_tarea=?, titulo=?, descripcion=?, ambiente=?, servicio=?,
-            error_presentado=?, solucion=?, estado=?, prioridad=?, fecha_reporte=?, fecha_solucion=?,
-            responsable=?, observaciones=?, updated_at=CURRENT_TIMESTAMP WHERE id=?
-        """;
+    public void update(Production t) throws SQLException {
+        String sql = "UPDATE tareas SET titulo=?, descripcion=?, prioridad=?, estado=?, fecha_limite=?, categoria=?, updated_at=CURRENT_TIMESTAMP WHERE id=?";
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
-            ps.setString(1, c.getNumeroTarea());
-            ps.setString(2, c.getTitulo());
-            ps.setString(3, c.getDescripcion());
-            ps.setString(4, c.getAmbiente());
-            ps.setString(5, c.getServicio());
-            ps.setString(6, c.getErrorPresentado());
-            ps.setString(7, c.getSolucion());
-            ps.setString(8, c.getEstado());
-            ps.setString(9, c.getPrioridad());
-            ps.setString(10, c.getFechaReporte());
-            ps.setString(11, c.getFechaSolucion());
-            ps.setString(12, c.getResponsable());
-            ps.setString(13, c.getObservaciones());
-            ps.setInt(14, c.getId());
+            ps.setString(1, t.getTitulo()); ps.setString(2, t.getDescripcion());
+            ps.setString(3, t.getPrioridad()); ps.setString(4, t.getEstado());
+            ps.setString(5, t.getFechaLimite()); ps.setString(6, t.getCategoria());
+            ps.setInt(7, t.getId());
             ps.executeUpdate();
         }
     }
 
     public void delete(int id) throws SQLException {
-        try (PreparedStatement ps = getConn().prepareStatement("DELETE FROM correctivos WHERE id=?")) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
+        try (PreparedStatement ps = getConn().prepareStatement("DELETE FROM tareas WHERE id=?")) {
+            ps.setInt(1, id); ps.executeUpdate();
         }
     }
 
     private Production map(ResultSet rs) throws SQLException {
-        Production c = new Production();
-        c.setId(rs.getInt("id"));
-        c.setNumeroTarea(rs.getString("numero_tarea"));
-        c.setTitulo(rs.getString("titulo"));
-        c.setDescripcion(rs.getString("descripcion"));
-        c.setAmbiente(rs.getString("ambiente"));
-        c.setServicio(rs.getString("servicio"));
-        c.setErrorPresentado(rs.getString("error_presentado"));
-        c.setSolucion(rs.getString("solucion"));
-        c.setEstado(rs.getString("estado"));
-        c.setPrioridad(rs.getString("prioridad"));
-        c.setFechaReporte(rs.getString("fecha_reporte"));
-        c.setFechaSolucion(rs.getString("fecha_solucion"));
-        c.setResponsable(rs.getString("responsable"));
-        c.setObservaciones(rs.getString("observaciones"));
-        return c;
+        Production t = new Production();
+        t.setId(rs.getInt("id")); t.setTitulo(rs.getString("titulo"));
+        t.setDescripcion(rs.getString("descripcion")); t.setPrioridad(rs.getString("prioridad"));
+        t.setEstado(rs.getString("estado")); t.setFechaLimite(rs.getString("fecha_limite"));
+        t.setCategoria(rs.getString("categoria"));
+        return t;
     }
 }
