@@ -455,7 +455,7 @@ public class DashboardPanel extends JPanel {
         return card;
     }
 
-    //  HELPERS
+    // HELPERS
     private JLabel heroValueLabel(Color accent) {
         JLabel lbl = new JLabel("—");
         lbl.setFont(UIConstants.FONT_HERO);
