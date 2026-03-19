@@ -248,7 +248,7 @@ public class DashboardPanel extends JPanel {
         weekGrid.add(buildStatCard("Nuevos", "Correctivos esta semana", UIConstants.SKY, lblWeekNew));
         Runnable tw1 = () -> {
             String from = LocalDate.now().minusDays(7).toString();
-            int v = queryInt("SELECT COUNT(*) FROM correctivos WHERE fecha_creacion >= '" + from + "'");
+            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE fecha_reporte >= '" + from + "'");
             SwingUtilities.invokeLater(() -> lblWeekNew.setText(String.valueOf(v)));
         };
         refreshTasks.add(tw1); tw1.run();
@@ -257,7 +257,7 @@ public class DashboardPanel extends JPanel {
         weekGrid.add(buildStatCard("Resueltos", "Cerrados esta semana", UIConstants.EMERALD, lblWeekSolved));
         Runnable tw2 = () -> {
             String from = LocalDate.now().minusDays(7).toString();
-            int v = queryInt("SELECT COUNT(*) FROM correctivos WHERE estado='Resuelto' AND fecha_solucion >= '" + from + "'");
+            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='Resuelto' AND fecha_solucion >= '" + from + "'");
             SwingUtilities.invokeLater(() -> lblWeekSolved.setText(String.valueOf(v)));
         };
         refreshTasks.add(tw2); tw2.run();
@@ -265,7 +265,7 @@ public class DashboardPanel extends JPanel {
         JLabel lblWeekCritical = statLabel(UIConstants.ROSE);
         weekGrid.add(buildStatCard("Críticos", "Alta prioridad activos", UIConstants.ROSE, lblWeekCritical));
         Runnable tw3 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM correctivos WHERE prioridad='Alta' AND estado!='Resuelto'");
+            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE prioridad='Alta' AND estado!='Resuelto'");
             SwingUtilities.invokeLater(() -> lblWeekCritical.setText(String.valueOf(v)));
         };
         refreshTasks.add(tw3); tw3.run();
@@ -565,6 +565,7 @@ public class DashboardPanel extends JPanel {
         ) {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (Exception e) {
+            System.err.println("[DashboardPanel] Error en query: " + sql + " → " + e.getMessage());
             return 0;
         }
     }
