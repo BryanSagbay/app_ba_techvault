@@ -1,7 +1,7 @@
 package baustro.fin.ec.ui.panels;
 
-import baustro.fin.ec.dao.TareaDAO;
-import baustro.fin.ec.model.Tarea;
+import baustro.fin.ec.dao.ProductionDAO;
+import baustro.fin.ec.model.Production;
 import baustro.fin.ec.ui.UIConstants;
 import baustro.fin.ec.ui.components.*;
 import baustro.fin.ec.util.IconManager;
@@ -20,12 +20,12 @@ import java.util.stream.Stream;
 
 public class ProductionPanel extends JPanel {
 
-    private final TareaDAO dao = new TareaDAO();
+    private final ProductionDAO dao = new ProductionDAO();
     private DefaultTableModel tableModel;
     private JTable table;
     private HeaderSearchFilter hsf;
     private JLabel statsLabel;
-    private List<Tarea> allData = new ArrayList<>();
+    private List<Production> allData = new ArrayList<>();
 
     public ProductionPanel() {
         setLayout(new BorderLayout());
@@ -201,7 +201,7 @@ public class ProductionPanel extends JPanel {
         String est  =hsf.getFilter(0);String prio=hsf.getFilter(1);
         String vence=hsf.getFilter(2);String sort=hsf.getFilter(3);
         LocalDate hoy=LocalDate.now();
-        Stream<Tarea> s=allData.stream();
+        Stream<Production> s=allData.stream();
         if(!q.isEmpty())    s=s.filter(t->nv(t.getTitulo(),q)||nv(t.getDescripcion(),q)||nv(t.getCategoria(),q));
         if(!est.isEmpty())  s=s.filter(t->est.equals(t.getEstado()));
         if(!prio.isEmpty()) s=s.filter(t->prio.equals(t.getPrioridad()));
@@ -221,15 +221,15 @@ public class ProductionPanel extends JPanel {
                 }catch(Exception e){return false;}
             });
         }
-        Comparator<Tarea> cmp=switch(sort){
+        Comparator<Production> cmp=switch(sort){
             case "Fecha limite" ->Comparator.comparing(t->nvl(t.getFechaLimite()));
             case "Estado"       ->Comparator.comparing(t->nvl(t.getEstado()));
             case "Titulo"       ->Comparator.comparing(t->nvl(t.getTitulo()));
             default             ->Comparator.comparingInt(t->prioOrd(t.getPrioridad()));
         };
-        List<Tarea> res=s.sorted(cmp).toList();
+        List<Production> res=s.sorted(cmp).toList();
         tableModel.setRowCount(0);
-        int i=1;for(Tarea t:res)
+        int i=1;for(Production t:res)
             tableModel.addRow(new Object[]{i++,t.getTitulo(),t.getCategoria(),t.getPrioridad(),t.getEstado(),t.getFechaLimite(),t.getDescripcion()});
         long pend=res.stream().filter(t->"Pendiente".equals(t.getEstado())).count();
         long enp=res.stream().filter(t->"En Progreso".equals(t.getEstado())).count();
@@ -247,22 +247,24 @@ public class ProductionPanel extends JPanel {
             default      -> 2;
         };
     }
-    private Tarea getSelected(){
+    private Production getSelected(){
         int row=table.getSelectedRow();
         if(row<0){JOptionPane.showMessageDialog(this,"Seleccione una tarea.");return null;}
         String tit=(String)tableModel.getValueAt(row,1);
         return allData.stream().filter(t->tit.equals(t.getTitulo())).findFirst().orElse(null);
     }
 
-    private void editSelected(){Tarea t=getSelected();if(t!=null)openForm(t);}
-    private void changeStatus(String st){Tarea t=getSelected();if(t==null)return;t.setEstado(st);try{dao.update(t);loadData();}catch(Exception ex){JOptionPane.showMessageDialog(this,"Error: "+ex.getMessage());}}
+    private void editSelected(){
+        Production t=getSelected();if(t!=null)openForm(t);}
+    private void changeStatus(String st){
+        Production t=getSelected();if(t==null)return;t.setEstado(st);try{dao.update(t);loadData();}catch(Exception ex){JOptionPane.showMessageDialog(this,"Error: "+ex.getMessage());}}
     private void deleteSelected(){
-        Tarea t=getSelected();if(t==null)return;
+        Production t=getSelected();if(t==null)return;
         int ok=JOptionPane.showConfirmDialog(this,"Eliminar \""+t.getTitulo()+"\"?","Confirmar",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);
         if(ok==JOptionPane.YES_OPTION){try{dao.delete(t.getId());loadData();}catch(Exception ex){JOptionPane.showMessageDialog(this,"Error: "+ex.getMessage());}}
     }
 
-    private void openForm(Tarea existing){
+    private void openForm(Production existing){
         JDialog d=new JDialog((Frame)SwingUtilities.getWindowAncestor(this),existing==null?"Nueva Tarea":"Editar Tarea",true);
         d.setSize(520,440);d.setLocationRelativeTo(this);d.getContentPane().setBackground(UIConstants.BG_CARD);d.setLayout(new BorderLayout());
         JPanel form=new JPanel(new GridBagLayout());form.setBackground(UIConstants.BG_CARD);form.setBorder(BorderFactory.createEmptyBorder(20,24,10,24));
@@ -317,7 +319,7 @@ public class ProductionPanel extends JPanel {
         bC.addActionListener(e->d.dispose());
         bS.addActionListener(e->{
             if(fTit.getText().trim().isEmpty()){JOptionPane.showMessageDialog(d,"Titulo obligatorio.");return;}
-            Tarea t=existing!=null?existing:new Tarea();
+            Production t=existing!=null?existing:new Production();
             t.setTitulo(fTit.getText().trim());
             t.setPrioridad((String)fPri.getSelectedItem());
             t.setEstado((String)fEst.getSelectedItem());
