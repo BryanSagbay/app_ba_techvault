@@ -1,7 +1,7 @@
 package baustro.fin.ec.ui.panels;
 
-import baustro.fin.ec.dao.ProductionDAO;
-import baustro.fin.ec.model.Production;
+import baustro.fin.ec.dao.TareaDAO;
+import baustro.fin.ec.model.Tarea;
 import baustro.fin.ec.ui.UIConstants;
 import baustro.fin.ec.ui.components.*;
 import baustro.fin.ec.util.IconManager;
@@ -22,14 +22,14 @@ import java.util.stream.Stream;
 
 public class TareaPanel extends JPanel {
 
-    private final ProductionDAO dao = new ProductionDAO();
+    private final TareaDAO dao = new TareaDAO();
 
     private DefaultTableModel tableModel;
     private JTable table;
     private HeaderSearchFilter hsf;
     private JLabel statsLabel;
 
-    private List<Production> allData = new ArrayList<>();
+    private List<Tarea> allData = new ArrayList<>();
 
     public TareaPanel() {
         setLayout(new BorderLayout());
@@ -242,27 +242,27 @@ public class TareaPanel extends JPanel {
         String amb    = hsf.getFilter(2);
         String sort   = hsf.getFilter(3);
 
-        Stream<Production> s = allData.stream();
+        Stream<Tarea> s = allData.stream();
         if (!q.isEmpty())      s = s.filter(c -> matches(c, q));
         if (!estado.isEmpty()) s = s.filter(c -> estado.equals(c.getEstado()));
         if (!prio.isEmpty())   s = s.filter(c -> prio.equals(c.getPrioridad()));
         if (!amb.isEmpty())    s = s.filter(c -> amb.equals(c.getAmbiente()));
 
-        Comparator<Production> cmp = switch (sort) {
+        Comparator<Tarea> cmp = switch (sort) {
             case "Fecha antigua"  -> Comparator.comparing(c -> nvl(c.getFechaReporte()));
             case "Prioridad Alta" -> Comparator.comparingInt(c -> prioOrd(c.getPrioridad()));
             case "Estado"         -> Comparator.comparing(c -> nvl(c.getEstado()));
             case "N Tarea"        -> Comparator.comparing(c -> nvl(c.getNumeroTarea()));
             case "Servicio"       -> Comparator.comparing(c -> nvl(c.getServicio()));
-            default               -> Comparator.comparing((Production c) -> nvl(c.getFechaReporte())).reversed();
+            default               -> Comparator.comparing((Tarea c) -> nvl(c.getFechaReporte())).reversed();
         };
 
-        List<Production> result = s.sorted(cmp).toList();
+        List<Tarea> result = s.sorted(cmp).toList();
         refreshTable(result);
         updateStats(result);
     }
 
-    private boolean matches(Production c, String q) {
+    private boolean matches(Tarea c, String q) {
         return nv(c.getNumeroTarea(), q) || nv(c.getTitulo(), q)
                 || nv(c.getServicio(), q) || nv(c.getErrorPresentado(), q)
                 || nv(c.getSolucion(), q) || nv(c.getAmbiente(), q);
@@ -274,10 +274,10 @@ public class TareaPanel extends JPanel {
         return switch (p != null ? p : "") { case "Alta" -> 0; case "Media" -> 1; default -> 2; };
     }
 
-    private void refreshTable(List<Production> data) {
+    private void refreshTable(List<Tarea> data) {
         tableModel.setRowCount(0);
         int i = 1;
-        for (Production c : data)
+        for (Tarea c : data)
             tableModel.addRow(new Object[]{
                     i++, c.getNumeroTarea(), c.getTitulo(),
                     c.getServicio(), c.getAmbiente(),
@@ -285,7 +285,7 @@ public class TareaPanel extends JPanel {
             });
     }
 
-    private void updateStats(List<Production> data) {
+    private void updateStats(List<Tarea> data) {
         long ab  = data.stream().filter(c -> "Abierto".equals(c.getEstado())).count();
         long ep  = data.stream().filter(c -> "En Progreso".equals(c.getEstado())).count();
         long res = data.stream().filter(c -> "Resuelto".equals(c.getEstado())).count();
@@ -297,18 +297,18 @@ public class TareaPanel extends JPanel {
 
     // SELECTION HELPERS
 
-    private Production getSelected() {
+    private Tarea getSelected() {
         int row = table.getSelectedRow();
         if (row < 0) { JOptionPane.showMessageDialog(this, "Seleccione un registro."); return null; }
         String num = (String) tableModel.getValueAt(row, 1);
         return allData.stream().filter(c -> num.equals(c.getNumeroTarea())).findFirst().orElse(null);
     }
 
-    private void editSelected()   { Production c = getSelected(); if (c != null) openForm(c); }
-    private void viewSelected()   { Production c = getSelected(); if (c != null) showDetail(c); }
+    private void editSelected()   { Tarea c = getSelected(); if (c != null) openForm(c); }
+    private void viewSelected()   { Tarea c = getSelected(); if (c != null) showDetail(c); }
 
     private void deleteSelected() {
-        Production c = getSelected();
+        Tarea c = getSelected();
         if (c == null) return;
         int ok = JOptionPane.showConfirmDialog(this,
                 "Eliminar [" + c.getNumeroTarea() + "] " + c.getTitulo() + "?",
@@ -321,7 +321,7 @@ public class TareaPanel extends JPanel {
 
     // DETALLE
 
-    private void showDetail(Production c) {
+    private void showDetail(Tarea c) {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 "Detalle del Producción", true);
         d.setSize(720, 620);
@@ -582,7 +582,7 @@ public class TareaPanel extends JPanel {
 
     // FORMULARIO
 
-    private void openForm(Production existing) {
+    private void openForm(Tarea existing) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 existing == null ? "Nuevo Tarea de Producción" : "Editar Tarea de Producción", true);
         dialog.setSize(720, 660);
@@ -643,7 +643,7 @@ public class TareaPanel extends JPanel {
             if (fNum.getText().trim().isEmpty() || fTit.getText().trim().isEmpty()) {
                 JOptionPane.showMessageDialog(dialog, "Número y título son obligatorios."); return;
             }
-            Production cas = existing != null ? existing : new Production();
+            Tarea cas = existing != null ? existing : new Tarea();
             cas.setNumeroTarea(fNum.getText().trim());   cas.setTitulo(fTit.getText().trim());
             cas.setDescripcion(fDesc.getText().trim());  cas.setAmbiente((String) fAmb.getSelectedItem());
             cas.setServicio(fSvc.getText().trim());      cas.setErrorPresentado(fErr.getText().trim());
