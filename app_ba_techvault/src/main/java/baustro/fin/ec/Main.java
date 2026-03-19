@@ -25,11 +25,11 @@ public class Main {
         UIManager.put("TextComponent.arc", 6);
 
         SwingUtilities.invokeLater(() -> {
-            // 1. Mostrar login — SIEMPRE al abrir la app
+            // 1. Mostrar login
             LoginDialog login = new LoginDialog();
             login.setVisible(true);
 
-            // 2. Si no se autentico -> salir
+            // 2. Si no se autentico
             if (!login.isAuthenticated()) {
                 System.exit(0);
                 return;
