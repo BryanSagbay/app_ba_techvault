@@ -62,7 +62,7 @@ public class TareaPanel extends JPanel {
         JLabel title = new JLabel("Tareas");
         title.setFont(UIConstants.FONT_TITLE);
         title.setForeground(UIConstants.TEXT_PRIMARY);
-        ImageIcon ico = IconManager.getIcon(IconManager.ICON_CORRECTIVO, 22);
+        ImageIcon ico = IconManager.getIcon(IconManager.ICON_TAREA, 22);
         if (ico != null && ico.getIconWidth() > 1) { title.setIcon(ico); title.setIconTextGap(8); }
         titlePane.add(title);
 
