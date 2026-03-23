@@ -54,7 +54,7 @@ public class ServidorDAO {
     }
 
     public void update(Servidor s) throws SQLException {
-        String sql = "UPDATE servidores SET nombre=?, ip=?, tipo=?, ambiente=?, sistema_operativo=?, descripcion=?, usuario_acceso=?, contrasena_enc=?, puerto=?, estado=?, notas=? WHERE id=?";
+        String sql = "UPDATE servidores SET host=?, ip=?, tipo=?, ambiente=?, sistema_operativo=?, descripcion=?, usuario_acceso=?, contrasena_enc=?, puerto=?, estado=?, notas=? WHERE id=?";
         try (PreparedStatement ps = getConn().prepareStatement(sql)) {
             ps.setString(1,  s.getHost());
             ps.setString(2,  s.getIp());
