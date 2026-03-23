@@ -161,7 +161,7 @@ public class MainFrame extends JFrame {
         sidebar.add(sectionLabel("DOCUMENTACIÓN"));
         sidebar.add(navButton("CAB",        IconManager.ICON_CORRECTIVO, PANEL_PRODUCTION));
         sidebar.add(navButton("Manuales",   IconManager.ICON_MANUAL,     PANEL_MANUAL));
-        sidebar.add(navButton("Scripts",    IconManager.ICON_SQL,     PANEL_SCRIPT));   // ← ícono correcto
+        sidebar.add(navButton("Scripts",    IconManager.ICON_SQL,     PANEL_SCRIPT));
         sidebar.add(navButton("Emergentes", IconManager.ICON_AZURE,      PANEL_EMERGENTE));
 
         sidebar.add(Box.createVerticalGlue());
