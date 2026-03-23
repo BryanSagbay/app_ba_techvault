@@ -118,7 +118,6 @@ public class MainFrame extends JFrame {
     }
 
     //  SIDEBAR
-
     private JPanel buildSidebar() {
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
