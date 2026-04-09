@@ -207,13 +207,29 @@ public class CasoPanel extends JPanel {
             s = s.filter(c -> area.equalsIgnoreCase(c.getArea()));
         }
 
-        // Ordenamiento: por defecto más reciente primero (allData ya viene DESC desde DB)
-        // Si elige "Más antiguo primero", invertimos
-        List<Caso> res = s.toList();
+        // Ordenamiento siempre por número de caso formato YYMMDD-NNNNNN descendente.
+        // Comparamos el string completo: como el formato es numérico puro (con guión),
+        // el orden lexicográfico descendente equivale al orden numérico descendente.
+        List<Caso> res = s.sorted(
+            Comparator.comparing((Caso c) -> caseNumberSortKey(c.getNumeroCaso())).reversed()
+        ).toList();
+
         if ("Más antiguo primero".equals(ord)) {
             res = res.reversed();
         }
         return res;
+    }
+
+    /**
+     * Genera una clave de ordenamiento normalizada para el número de caso.
+     * Formato esperado: YYMMDD-NNNNNN (ej: 260408-000101).
+     * Elimina caracteres no alfanuméricos y devuelve el string resultante,
+     * que al ser ordenado lexicográficamente produce el orden cronológico correcto.
+     */
+    private String caseNumberSortKey(String numeroCaso) {
+        if (numeroCaso == null || numeroCaso.isBlank()) return "";
+        // Quitar todo excepto dígitos para comparación numérica pura
+        return numeroCaso.replaceAll("[^0-9]", "");
     }
 
     //  ACCIONES CRUD

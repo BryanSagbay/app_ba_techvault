@@ -11,6 +11,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Stream;
@@ -332,7 +333,17 @@ public class TareaPanel extends JPanel {
         String amb  = hsf.getFilter(1);
         String sort = hsf.getFilter(2);
 
-        Stream<Tarea> s = allData.stream();
+        Stream<Tarea> s = allData.stream()
+                // Ocultar tareas Completadas con más de 7 días de antigüedad
+                .filter(c -> {
+                    if (!"Completado".equals(c.getEstado())) return true;
+                    String fr = nvl(c.getFechaReporte());
+                    if (fr.isBlank()) return true; // sin fecha → siempre visible
+                    try {
+                        LocalDate fecha = LocalDate.parse(fr.length() > 10 ? fr.substring(0, 10) : fr);
+                        return ChronoUnit.DAYS.between(fecha, LocalDate.now()) <= 7;
+                    } catch (Exception ex) { return true; }
+                });
         if (!q.isEmpty())    s = s.filter(c -> matches(c, q));
         if (!prio.isEmpty()) s = s.filter(c -> prio.equals(c.getPrioridad()));
         if (!amb.isEmpty())  s = s.filter(c -> amb.equals(c.getAmbiente()));

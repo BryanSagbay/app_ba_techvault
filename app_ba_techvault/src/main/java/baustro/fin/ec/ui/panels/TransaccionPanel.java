@@ -24,6 +24,7 @@ public class TransaccionPanel extends JPanel {
     private HeaderSearchFilter hsf;
     private JLabel statsLabel;
     private List<Transaccion> allData = new ArrayList<>();
+    private JComboBox<String> subsistemaCombo;
 
     public TransaccionPanel() {
         setLayout(new BorderLayout());
@@ -90,6 +91,18 @@ public class TransaccionPanel extends JPanel {
         });
 
         //  BOTTOM: filtros
+        // ComboBox dinámico de subsistemas
+        subsistemaCombo = new JComboBox<>(new String[]{"Todos"});
+        subsistemaCombo.setBackground(UIConstants.BG_SURFACE);
+        subsistemaCombo.setForeground(UIConstants.TEXT_PRIMARY);
+        subsistemaCombo.setFont(UIConstants.FONT_SMALL);
+        subsistemaCombo.setPreferredSize(new Dimension(160, 28));
+        subsistemaCombo.addActionListener(e -> applyFilters());
+
+        JLabel lblSub = new JLabel("Subsistema:");
+        lblSub.setFont(UIConstants.FONT_SMALL);
+        lblSub.setForeground(UIConstants.TEXT_SECONDARY);
+
         hsf = new HeaderSearchFilter(
                 "Buscar trx, subsistema, descripción...",
                 new HeaderSearchFilter.ComboConfig("Tipo",    TIPOS,
@@ -100,9 +113,15 @@ public class TransaccionPanel extends JPanel {
                         "TRX A-Z")
         ).onChanged(this::applyFilters);
 
-        JPanel bottom = new JPanel(new BorderLayout());
+        JPanel subPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        subPanel.setOpaque(false);
+        subPanel.add(lblSub);
+        subPanel.add(subsistemaCombo);
+
+        JPanel bottom = new JPanel(new BorderLayout(8, 0));
         bottom.setBackground(UIConstants.BG_BASE);
         bottom.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+        bottom.add(subPanel, BorderLayout.WEST);
         bottom.add(hsf, BorderLayout.CENTER);
 
         // ENSAMBLE
@@ -135,19 +154,44 @@ public class TransaccionPanel extends JPanel {
     }
 
     private void loadData() {
-        try { allData = dao.findAll(); applyFilters(); }
+        try { allData = dao.findAll(); refreshSubsistemaCombo(); applyFilters(); }
         catch (Exception ex) { JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage()); }
+    }
+
+    private void refreshSubsistemaCombo() {
+        String selected = (String) subsistemaCombo.getSelectedItem();
+        subsistemaCombo.removeAllItems();
+        subsistemaCombo.addItem("Todos");
+        allData.stream()
+                .map(t -> nvl(t.getSubsistema()).trim())
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .sorted()
+                .forEach(subsistemaCombo::addItem);
+        // Restaurar selección si aún existe
+        if (selected != null) {
+            for (int i = 0; i < subsistemaCombo.getItemCount(); i++) {
+                if (selected.equals(subsistemaCombo.getItemAt(i))) {
+                    subsistemaCombo.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
     }
 
     private void applyFilters() {
         String q    = hsf.getQuery().toLowerCase();
         String tipo = hsf.getFilter(0);  // índice 0 → Tipo
         String sort = hsf.getFilter(1);  // índice 1 → Ordenar
+        String subSelected = subsistemaCombo != null
+                ? (String) subsistemaCombo.getSelectedItem() : "Todos";
 
         Stream<Transaccion> s = allData.stream();
         if (!q.isEmpty())    s = s.filter(t -> nv(t.getTrx(), q) || nv(t.getSubsistema(), q)
                 || nv(t.getSubtransaccion(), q) || nv(t.getDescripcion(), q));
         if (!tipo.isEmpty()) s = s.filter(t -> tipo.equals(t.getTipo()));
+        if (subSelected != null && !"Todos".equals(subSelected))
+            s = s.filter(t -> subSelected.equals(nvl(t.getSubsistema()).trim()));
 
         Comparator<Transaccion> cmp = switch (sort) {
             case "TRX Z-A"          -> Comparator.comparing((Transaccion t) -> nvl(t.getTrx())).reversed();
