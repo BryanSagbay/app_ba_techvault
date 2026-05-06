@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 
 public class TransaccionPanel extends JPanel {
 
-    private static final String[] TIPOS = {"Mantenimiento", "Consulta", "Mensaje"};
+    private static final String[] TIPOS = {"Mantenimiento", "Consulta", "Reporte","Monitoreo"};
 
     private final TransaccionDAO dao = new TransaccionDAO();
     private DefaultTableModel tableModel;
@@ -143,7 +143,8 @@ public class TransaccionPanel extends JPanel {
                 setForeground(sel ? UIConstants.TEXT_BRIGHT : switch (s) {
                     case "Mantenimiento" -> UIConstants.ACCENT_ORANGE;
                     case "Consulta"      -> UIConstants.ACCENT_BLUE;
-                    case "Mensaje"       -> UIConstants.ACCENT_GREEN;
+                    case "Reporte"       -> UIConstants.ACCENT_GREEN;
+                    case "Monitoreo"     -> UIConstants.ACCENT_PURPLE;
                     default              -> UIConstants.TEXT_SECONDARY;
                 });
                 setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD));
