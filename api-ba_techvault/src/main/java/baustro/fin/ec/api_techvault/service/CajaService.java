@@ -19,7 +19,6 @@ public class CajaService {
     public List<Map<String,Object>> cajasAbiertas(){
 
         String sql = """
-        consulta1
         """;
 
         return jdbc.queryForList(sql);
@@ -29,19 +28,24 @@ public class CajaService {
     public List<Map<String,Object>> cajasCerradas(){
 
         String sql = """
-        consulta2
         """;
 
         return jdbc.queryForList(sql);
     }
 
-    // SELECT 3 → cajas faltantes
+    // SELECT 2 → cajas cerradas
     public List<Map<String,Object>> cajasFaltantes(){
 
         String sql = """
-        consulta3
         """;
-
         return jdbc.queryForList(sql);
     }
+
+    // SELECT 2 → Facturas - Retenciones
+    public List<Map<String, Object>> resumenFE() {
+        String sql = """
+    """;
+        return jdbc.queryForList(sql);
+    }
+
 }
