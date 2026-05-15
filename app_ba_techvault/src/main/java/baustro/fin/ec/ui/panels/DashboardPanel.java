@@ -196,82 +196,70 @@ public class DashboardPanel extends JPanel {
         content.add(cajasGrid);
         content.add(Box.createVerticalStrut(36));
 
-        // SECTION: CORRECTIVOS
-        content.add(sectionLabel("INCIDENTES ·  GESTIÓN DE TAREAS"));
-        content.add(Box.createVerticalStrut(14));
+        // FACTURAS
+        content.add(sectionLabel("FACTURACIÓN ELECTRÓNICA - MENSUALES"));
+        content.add(Box.createVerticalStrut(10));
+        JPanel facGrid = createGrid(4);
+        facGrid.setMaximumSize(new Dimension(1400, 160));
 
-        JPanel corrGrid = createGrid(4);
+        JLabel lblFacPend = statLabel(UIConstants.AMBER);
+        facGrid.add(buildStatCard("Pendientes", "Facturas en espera", UIConstants.AMBER, lblFacPend));
+        Runnable rFacPend = () -> ApiService.fetchFeCount("Facturas - PENDIENTES", lblFacPend);
+        refreshTasks.add(rFacPend);
+        rFacPend.run();
 
-        JLabel lblTotal = statLabel(UIConstants.INDIGO);
-        corrGrid.add(buildStatCard("Total Registrados", "Correctivos en sistema", UIConstants.INDIGO, lblTotal));
-        Runnable t1 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM tareas");
-            SwingUtilities.invokeLater(() -> lblTotal.setText(String.valueOf(v)));
-        };
-        refreshTasks.add(t1); t1.run();
+        JLabel lblFacErr = statLabel(UIConstants.ROSE);
+        facGrid.add(buildStatCard("Con Error", "Facturas rechazadas", UIConstants.ROSE, lblFacErr));
+        Runnable rFacErr = () -> ApiService.fetchFeCount("Facturas - ERROR", lblFacErr);
+        refreshTasks.add(rFacErr);
+        rFacErr.run();
 
-        JLabel lblOpen = statLabel(UIConstants.ROSE);
-        corrGrid.add(buildStatCard("Abiertos", "Pendientes de atención", UIConstants.ROSE, lblOpen));
-        Runnable t2 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='Abierto'");
-            SwingUtilities.invokeLater(() -> lblOpen.setText(String.valueOf(v)));
-        };
-        refreshTasks.add(t2); t2.run();
+        JLabel lblFacRec = statLabel(UIConstants.EMERALD);
+        facGrid.add(buildStatCard("Recibidas", "Facturas aceptadas SRI", UIConstants.EMERALD, lblFacRec));
+        Runnable rFacRec = () -> ApiService.fetchFeCount("Facturas - RECIBIDAS", lblFacRec);
+        refreshTasks.add(rFacRec);
+        rFacRec.run();
 
-        JLabel lblProg = statLabel(UIConstants.AMBER);
-        corrGrid.add(buildStatCard("En Progreso", "Atención en curso", UIConstants.AMBER, lblProg));
-        Runnable t3 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='En Progreso'");
-            SwingUtilities.invokeLater(() -> lblProg.setText(String.valueOf(v)));
-        };
-        refreshTasks.add(t3); t3.run();
+        JLabel lblFacDev = statLabel(UIConstants.VIOLET);
+        facGrid.add(buildStatCard("Devueltas", "Facturas devueltas SRI", UIConstants.VIOLET, lblFacDev));
+        Runnable rFacDev = () -> ApiService.fetchFeCount("Facturas - DEVUELTA", lblFacDev);
+        refreshTasks.add(rFacDev);
+        rFacDev.run();
 
-        JLabel lblDone = statLabel(UIConstants.EMERALD);
-        corrGrid.add(buildStatCard("Resueltos Hoy", "Cerrados en el día", UIConstants.EMERALD, lblDone));
-        Runnable t4 = () -> {
-            String hoy = LocalDate.now().toString();
-            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='Resuelto' AND fecha_solucion LIKE '%" + hoy + "%'");
-            SwingUtilities.invokeLater(() -> lblDone.setText(String.valueOf(v)));
-        };
-        refreshTasks.add(t4); t4.run();
+        content.add(facGrid);
+        content.add(Box.createVerticalStrut(20));
 
-        content.add(corrGrid);
-        content.add(Box.createVerticalStrut(36));
+        // RETENCIONES
+        content.add(sectionLabel("RETENCIONES - MENSUALES"));
+        content.add(Box.createVerticalStrut(10));
+        JPanel retGrid = createGrid(4);
+        retGrid.setMaximumSize(new Dimension(1400, 160));
 
-        // SECTION: RESUMEN SEMANA
-        content.add(sectionLabel("ESTA SEMANA  ·  RESUMEN"));
-        content.add(Box.createVerticalStrut(14));
+        JLabel lblRetPend = statLabel(UIConstants.AMBER);
+        retGrid.add(buildStatCard("Pendientes", "Retenciones en espera", UIConstants.AMBER, lblRetPend));
+        Runnable rRetPend = () -> ApiService.fetchFeCount("Retenciones - PENDIENTES", lblRetPend);
+        refreshTasks.add(rRetPend);
+        rRetPend.run();
 
-        JPanel weekGrid = createGrid(3);
+        JLabel lblRetErr = statLabel(UIConstants.ROSE);
+        retGrid.add(buildStatCard("Con Error", "Retenciones rechazadas", UIConstants.ROSE, lblRetErr));
+        Runnable rRetErr = () -> ApiService.fetchFeCount("Retenciones - ERROR", lblRetErr);
+        refreshTasks.add(rRetErr);
+        rRetErr.run();
 
-        JLabel lblWeekNew = statLabel(UIConstants.SKY);
-        weekGrid.add(buildStatCard("Nuevos", "Correctivos esta semana", UIConstants.SKY, lblWeekNew));
-        Runnable tw1 = () -> {
-            String from = LocalDate.now().minusDays(7).toString();
-            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE fecha_reporte >= '" + from + "'");
-            SwingUtilities.invokeLater(() -> lblWeekNew.setText(String.valueOf(v)));
-        };
-        refreshTasks.add(tw1); tw1.run();
+        JLabel lblRetRec = statLabel(UIConstants.EMERALD);
+        retGrid.add(buildStatCard("Recibidas", "Retenciones aceptadas SRI", UIConstants.EMERALD, lblRetRec));
+        Runnable rRetRec = () -> ApiService.fetchFeCount("Retenciones - RECIBIDAS", lblRetRec);
+        refreshTasks.add(rRetRec);
+        rRetRec.run();
 
-        JLabel lblWeekSolved = statLabel(UIConstants.EMERALD);
-        weekGrid.add(buildStatCard("Resueltos", "Cerrados esta semana", UIConstants.EMERALD, lblWeekSolved));
-        Runnable tw2 = () -> {
-            String from = LocalDate.now().minusDays(7).toString();
-            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE estado='Resuelto' AND fecha_solucion >= '" + from + "'");
-            SwingUtilities.invokeLater(() -> lblWeekSolved.setText(String.valueOf(v)));
-        };
-        refreshTasks.add(tw2); tw2.run();
+        JLabel lblRetDev = statLabel(UIConstants.VIOLET);
+        retGrid.add(buildStatCard("Devueltas", "Retenciones devueltas SRI", UIConstants.VIOLET, lblRetDev));
+        Runnable rRetDev = () -> ApiService.fetchFeCount("Retenciones - DEVUELTA", lblRetDev);
+        refreshTasks.add(rRetDev);
+        rRetDev.run();
 
-        JLabel lblWeekCritical = statLabel(UIConstants.ROSE);
-        weekGrid.add(buildStatCard("Críticos", "Alta prioridad activos", UIConstants.ROSE, lblWeekCritical));
-        Runnable tw3 = () -> {
-            int v = queryInt("SELECT COUNT(*) FROM tareas WHERE prioridad='Alta' AND estado!='Resuelto'");
-            SwingUtilities.invokeLater(() -> lblWeekCritical.setText(String.valueOf(v)));
-        };
-        refreshTasks.add(tw3); tw3.run();
-
-        content.add(weekGrid);
-        content.add(Box.createVerticalStrut(36));
+        content.add(retGrid);
 
         wrapper.add(content, BorderLayout.NORTH);
         return wrapper;
