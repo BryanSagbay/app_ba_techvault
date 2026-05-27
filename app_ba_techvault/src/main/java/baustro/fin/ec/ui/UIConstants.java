@@ -58,7 +58,7 @@ public final class UIConstants {
     //  DOMAIN CONSTANTS
     public static final String[] PRIORIDADES          = {"Alta", "Media", "Baja"};
     public static final String[] AMBIENTES            = {"Producción", "Desarrollo", "QA", "Staging", "DR"};
-    public static final String[] ESTADOS_TAREA        = {"Pendiente", "En Progreso", "Completada", "Cancelada"};
+    public static final String[] ESTADOS_TAREA        = {"Pendiente", "En Progreso", "Completada", "Cancelada","Reversada"};
     public static final String[] TIPOS_SERVIDOR       = {"Aplicación", "Base de Datos", "Web", "Proxy", "Balanceador", "Almacenamiento", "Monitoreo", "Otro"};
     public static final String[] ESTADOS_SERVIDOR     = {"Activo", "Inactivo", "Mantenimiento"};
     public static final String[] SISTEMAS_OPERATIVOS_CMD = {"Linux", "Windows"};
