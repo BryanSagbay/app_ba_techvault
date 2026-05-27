@@ -132,6 +132,7 @@ public final class UIConstants {
             case "Cerrado"                       -> TEXT_MUTED;
             case "Completada", "Completado", "Activo", "Resuelto" -> ACCENT_GREEN;
             case "Cancelada", "Inactivo", "Mantenimiento"         -> ACCENT_RED;
+            case "Reversada"                               -> ACCENT_PURPLE;
             default -> TEXT_SECONDARY;
         };
     }
