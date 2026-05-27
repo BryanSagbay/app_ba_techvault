@@ -227,6 +227,7 @@ public class ProductionPanel extends JPanel {
             case "Titulo"       ->Comparator.comparing(t->nvl(t.getTitulo()));
             default             ->Comparator.comparingInt(t->prioOrd(t.getPrioridad()));
         };
+        
         List<Production> res=s.sorted(cmp).toList();
         tableModel.setRowCount(0);
         int i=1;for(Production t:res)
