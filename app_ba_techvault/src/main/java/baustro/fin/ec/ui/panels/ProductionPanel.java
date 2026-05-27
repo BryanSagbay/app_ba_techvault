@@ -236,7 +236,9 @@ public class ProductionPanel extends JPanel {
         long comp=res.stream().filter(t->"Completada".equals(t.getEstado())).count();
         long rev = res.stream().filter(t -> "Reversada".equals(t.getEstado())).count();
         long venc;try{venc=res.stream().filter(t->t.getFechaLimite()!=null&&!t.getFechaLimite().isEmpty()&&LocalDate.parse(t.getFechaLimite()).isBefore(hoy)&&!"Completada".equals(t.getEstado())).count();}catch(Exception e){venc=0;}
-        statsLabel.setText(String.format("  Total: %d   |   Pendientes: %d   |   En Progreso: %d   |   Completadas: %d   |   Vencidas: %d",res.size(),pend,enp,comp,venc));
+        statsLabel.setText(String.format(
+                "  Total: %d   |   Pendientes: %d   |   En Progreso: %d   |   Completadas: %d   |   Reversadas: %d   |   Vencidas: %d",
+                res.size(), pend, enp, comp, rev, venc));
     }
 
     private boolean nv(String f,String q){return f!=null&&f.toLowerCase().contains(q);}
