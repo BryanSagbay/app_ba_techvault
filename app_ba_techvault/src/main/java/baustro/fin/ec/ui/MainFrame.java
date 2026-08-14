@@ -20,7 +20,7 @@ public class MainFrame extends JFrame {
 
     private final Map<String, JPanel> loadedPanels = new HashMap<>();
 
-    private static final String PANEL_DASHBOARD    = "dashboard";
+    //private static final String PANEL_DASHBOARD    = "dashboard";
     private static final String PANEL_SERVCRED     = "servcred";
     private static final String PANEL_TAREA        = "tareas";
     private static final String PANEL_NOTA         = "notas";
@@ -54,7 +54,8 @@ public class MainFrame extends JFrame {
         contentPanel.setLayout(cardLayout);
         contentPanel.setBackground(UIConstants.BG_BASE);
 
-        showPanel(PANEL_DASHBOARD);
+        //showPanel(PANEL_DASHBOARD);
+        showPanel(PANEL_TAREA);
 
         add(buildSidebar(), BorderLayout.WEST);
         add(contentPanel,   BorderLayout.CENTER);
@@ -95,7 +96,7 @@ public class MainFrame extends JFrame {
 
     private JPanel createPanel(String panelName) {
         return switch (panelName) {
-            case PANEL_DASHBOARD   -> new DashboardPanel();
+            //case PANEL_DASHBOARD   -> new DashboardPanel();
             case PANEL_SERVCRED    -> new ServidorContrasenaPanel();
             case PANEL_TAREA       -> new TareaPanel();
             case PANEL_NOTA        -> new NotaPanel();
@@ -143,14 +144,15 @@ public class MainFrame extends JFrame {
 
         // PRINCIPAL
         sidebar.add(sectionLabel("PRINCIPAL"));
-        JPanel btnDash = navButton("Dashboard", IconManager.ICON_DASHBOARD, PANEL_DASHBOARD);
+        //JPanel btnDash = navButton("Dashboard", IconManager.ICON_DASHBOARD, PANEL_DASHBOARD);
+        JPanel btnDash = navButton("Tareas", IconManager.ICON_TAREA, PANEL_TAREA);
         sidebar.add(btnDash);
         activeNavBtn = btnDash;
         setNavActive(btnDash, true);
 
         // HERRAMIENTAS
         sidebar.add(sectionLabel("HERRAMIENTAS"));
-        sidebar.add(navButton("Tareas",      IconManager.ICON_TAREA,    PANEL_TAREA));
+        //sidebar.add(navButton("Tareas",      IconManager.ICON_TAREA,    PANEL_TAREA));
         sidebar.add(navButton("Notas",       IconManager.ICON_NOTA,     PANEL_NOTA));
         sidebar.add(navButton("Servidores",  IconManager.ICON_SERVIDOR, PANEL_SERVCRED));
 
