@@ -220,7 +220,7 @@ public class ServidorContrasenaPanel extends JPanel {
         statsBar.add(statsLabel);
 
         //  TABLA
-        String[] cols = {"#", "Host", "IP", "Tipo", "Ambiente", "SO", "Usuario", "Contraseña", "Puerto", "Estado",""};
+        String[] cols = {"#", "Host", "IP", "Tipo", "Ambiente", "SO", "Usuario", "Contraseña", "Puerto", "Estado","Join"};
         tableModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return c == 10; } // solo el botón "Entrar" es clickeable
         };
@@ -228,7 +228,7 @@ public class ServidorContrasenaPanel extends JPanel {
         StyledComponents.styleTable(table);
         table.setRowHeight(34);
 
-        int[] widths = {36, 150, 120, 100, 90, 80, 110, 100, 60, 90, 90};
+        int[] widths = {36, 150, 120, 100, 90, 80, 110, 100, 60, 90, 44};
         for (int i = 0; i < widths.length; i++)
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         table.getColumnModel().getColumn(0).setMaxWidth(40);
@@ -507,46 +507,39 @@ public class ServidorContrasenaPanel extends JPanel {
         return null;
     }
 
-    /** Renderer: pinta el botón "Entrar" transparente, respetando el color de la fila. */
+    /** Renderer: solo el ícono "Entrar" (sin borde ni relleno), respetando el color de la fila. */
     private class ConnectButtonRenderer extends JButton implements javax.swing.table.TableCellRenderer {
         ConnectButtonRenderer() {
             setOpaque(true);
+            setBorderPainted(false);
             setContentAreaFilled(false);
-            setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD));
             setFocusPainted(false);
-            Color defaultColor = UIManager.getColor("Button.borderColor");
-            Color softerColor = new Color(defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), 80);
-            setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(softerColor, 1),
-                    BorderFactory.createEmptyBorder(3, 10, 3, 10)
-            ));
-            setText("Entrar");
+            setBorder(null);
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setIcon(IconManager.getIcon(IconManager.ICON_ABRIR, 15));
         }
         @Override
         public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
-            Color rowBg = sel ? UIConstants.ACCENT_BLUE
-                    : (row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER);
-            setBackground(rowBg);
-            setForeground(sel ? UIConstants.TEXT_BRIGHT : UIConstants.ACCENT_BLUE);
+            setBackground(sel ? UIConstants.ACCENT_BLUE
+                    : (row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER));
             return this;
         }
     }
 
-    /** Editor: hace clickeable el botón "Entrar" (mismo estilo transparente) y dispara la conexión. */
+    /** Editor: mismo ícono, clickeable, dispara la conexión. */
     private class ConnectButtonEditor extends DefaultCellEditor {
-        private final JButton btn = new JButton("Entrar");
+        private final JButton btn = new JButton();
         private int editingRow;
 
         ConnectButtonEditor() {
             super(new JCheckBox());
             btn.setOpaque(true);
+            btn.setBorderPainted(false);
             btn.setContentAreaFilled(false);
-            btn.setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD));
             btn.setFocusPainted(false);
-            btn.setForeground(UIConstants.ACCENT_GREEN);
-            btn.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(UIConstants.ACCENT_GREEN, 1),
-                    BorderFactory.createEmptyBorder(3, 10, 3, 10)));
+            btn.setBorder(null);
+            btn.setHorizontalAlignment(SwingConstants.CENTER);
+            btn.setIcon(IconManager.getIcon(IconManager.ICON_OPEN, 18));
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             btn.addActionListener(e -> {
                 fireEditingStopped();

@@ -16,7 +16,7 @@ public class IconManager {
     public static final String ICON_DASHBOARD = "dashboard";
     public static final String ICON_CORRECTIVO = "cab";
     public static final String ICON_SERVIDOR = "servidor";
-    public static final String ICON_PASSWORD = "contrasenas";
+    public static final String ICON_ABRIR = "abrir";
     public static final String ICON_INFO = "info";
     public static final String ICON_TAREA = "tarea";
     public static final String ICON_NOTA = "nota";
@@ -38,6 +38,7 @@ public class IconManager {
     public static final String ICON_MOON = "luna";
     public static final String ICON_SUN  = "sol";
     public static final String ICON_CASO = "casos";
+    public static final String ICON_OPEN = "abrir";
 
     public static ImageIcon getIcon(String name, int size) {
         String key = name + "_" + size;
