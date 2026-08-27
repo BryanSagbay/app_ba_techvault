@@ -220,15 +220,15 @@ public class ServidorContrasenaPanel extends JPanel {
         statsBar.add(statsLabel);
 
         //  TABLA
-        String[] cols = {"#", "Host", "IP", "Tipo", "Ambiente", "SO", "Usuario", "Contraseña", "Puerto", "Estado"};
+        String[] cols = {"#", "Host", "IP", "Tipo", "Ambiente", "SO", "Usuario", "Contraseña", "Puerto", "Estado",""};
         tableModel = new DefaultTableModel(cols, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+            public boolean isCellEditable(int r, int c) { return c == 10; } // solo el botón "Entrar" es clickeable
         };
         table = new JTable(tableModel);
         StyledComponents.styleTable(table);
         table.setRowHeight(34);
 
-        int[] widths = {36, 150, 120, 100, 90, 80, 110, 100, 60, 90};
+        int[] widths = {36, 150, 120, 100, 90, 80, 110, 100, 60, 90, 90};
         for (int i = 0; i < widths.length; i++)
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         table.getColumnModel().getColumn(0).setMaxWidth(40);
@@ -263,6 +263,10 @@ public class ServidorContrasenaPanel extends JPanel {
                 return this;
             }
         });
+
+        // Columna Join — botón para conectar directo al servidor (RDP/SSH)
+        table.getColumnModel().getColumn(10).setCellRenderer(new ConnectButtonRenderer());
+        table.getColumnModel().getColumn(10).setCellEditor(new ConnectButtonEditor());
 
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) { if (e.getClickCount() == 2) editSelected(); }
@@ -332,7 +336,8 @@ public class ServidorContrasenaPanel extends JPanel {
                     srv.getHost(), srv.getIp(), srv.getTipo(), srv.getAmbiente(),
                     srv.getSistemaOperativo(), srv.getUsuarioAcceso(),
                     srv.getContrasenaEncriptada(),   // valor real (oculto por renderer)
-                    srv.getPuerto(), srv.getEstado()
+                    srv.getPuerto(), srv.getEstado(),
+                    "Entrar"
             });
 
         long act  = res.stream().filter(srv -> "Activo".equals(srv.getEstado())).count();
@@ -397,6 +402,167 @@ public class ServidorContrasenaPanel extends JPanel {
             try { dao.delete(s.getId()); loadData(); }
             catch (Exception ex) { JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage()); }
         }
+    }
+
+    //  CONEXIÓN DIRECTA (botón "Entrar" de la columna Join)
+
+    private void connectToServerRow(int row) {
+        if (row < 0 || row >= tableModel.getRowCount()) return;
+        String host = (String) tableModel.getValueAt(row, 1);
+        Servidor s = allData.stream().filter(srv -> host.equals(srv.getHost())).findFirst().orElse(null);
+        if (s != null) conectar(s);
+    }
+
+    private void conectar(Servidor s) {
+        String so = nvl(s.getSistemaOperativo());
+        String ip = nvl(s.getIp());
+        if (ip.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Este servidor no tiene IP configurada.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            if ("Windows".equalsIgnoreCase(so)) {
+                conectarRDP(s);
+            } else if ("Linux".equalsIgnoreCase(so)) {
+                conectarSSH(s);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "El servidor no tiene un Sistema Operativo válido (\"" + so + "\").\n" +
+                                "Edítelo y seleccione Windows o Linux para poder conectar.",
+                        "No se puede conectar", JOptionPane.WARNING_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al conectar: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Windows → RDP (mstsc). Registra la credencial en cmdkey para que no pida clave. */
+    private void conectarRDP(Servidor s) throws Exception {
+        String ip = s.getIp().trim();
+        String puerto = nvl(s.getPuerto()).isBlank() ? "3389" : s.getPuerto().trim();
+        String direccion = "3389".equals(puerto) ? ip : ip + ":" + puerto;
+
+        String usuario = nvl(s.getUsuarioAcceso());
+        String clave = "";
+        String enc = s.getContrasenaEncriptada();
+        if (!usuario.isBlank() && enc != null && !enc.isBlank()) {
+            if (!EncryptionUtil.hasMasterPassword())
+                throw new Exception("Clave maestra no disponible. Bloquea y vuelve a ingresar.");
+            clave = EncryptionUtil.decrypt(enc);
+        }
+
+        boolean credGuardada = false;
+        if (!usuario.isBlank() && !clave.isBlank()) {
+            new ProcessBuilder("cmdkey", "/generic:TERMSRV/" + ip, "/user:" + usuario, "/pass:" + clave)
+                    .redirectErrorStream(true).start().waitFor();
+            credGuardada = true;
+        }
+
+        new ProcessBuilder("mstsc", "/v:" + direccion).start();
+
+        // Borra la credencial temporal poco después de lanzar mstsc
+        if (credGuardada) {
+            String ipFinal = ip;
+            new Thread(() -> {
+                try {
+                    Thread.sleep(15000);
+                    new ProcessBuilder("cmdkey", "/delete:TERMSRV/" + ipFinal)
+                            .redirectErrorStream(true).start().waitFor();
+                } catch (Exception ignored) {}
+            }).start();
+        }
+    }
+
+    /** Linux → SSH. Usa MobaXterm si está instalado; si no, abre una consola cmd con ssh. */
+    private void conectarSSH(Servidor s) throws Exception {
+        String ip = s.getIp().trim();
+        String puerto = nvl(s.getPuerto()).isBlank() ? "22" : s.getPuerto().trim();
+        String usuario = nvl(s.getUsuarioAcceso());
+        String destino = usuario.isBlank() ? ip : usuario + "@" + ip;
+        String sshCmd = "ssh " + destino + " -p " + puerto;
+
+        String moba = buscarMobaXterm();
+        if (moba != null) {
+            new ProcessBuilder(moba, "-newtab", sshCmd).start();
+        } else {
+            new ProcessBuilder("cmd", "/c", "start", "\"SSH " + s.getHost() + "\"",
+                    "cmd", "/k", sshCmd).start();
+        }
+    }
+
+    /** Busca MobaXterm.exe en rutas típicas de instalación en Windows. */
+    private String buscarMobaXterm() {
+        String[] candidatos = {
+                System.getenv("ProgramFiles") + "\\Mobatek\\MobaXterm\\MobaXterm.exe",
+                System.getenv("ProgramFiles(x86)") + "\\Mobatek\\MobaXterm\\MobaXterm.exe",
+                System.getenv("LOCALAPPDATA") + "\\Programs\\Mobatek\\MobaXterm\\MobaXterm.exe",
+                System.getProperty("user.home") + "\\Downloads\\MobaXterm.exe",
+                System.getProperty("user.home") + "\\Desktop\\MobaXterm.exe"
+        };
+        for (String c : candidatos) {
+            if (c != null && new File(c).isFile()) return c;
+        }
+        return null;
+    }
+
+    /** Renderer: pinta el botón "Entrar" transparente, respetando el color de la fila. */
+    private class ConnectButtonRenderer extends JButton implements javax.swing.table.TableCellRenderer {
+        ConnectButtonRenderer() {
+            setOpaque(true);
+            setContentAreaFilled(false);
+            setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD));
+            setFocusPainted(false);
+            Color defaultColor = UIManager.getColor("Button.borderColor");
+            Color softerColor = new Color(defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), 80);
+            setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(softerColor, 1),
+                    BorderFactory.createEmptyBorder(3, 10, 3, 10)
+            ));
+            setText("Entrar");
+        }
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int row, int col) {
+            Color rowBg = sel ? UIConstants.ACCENT_BLUE
+                    : (row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER);
+            setBackground(rowBg);
+            setForeground(sel ? UIConstants.TEXT_BRIGHT : UIConstants.ACCENT_BLUE);
+            return this;
+        }
+    }
+
+    /** Editor: hace clickeable el botón "Entrar" (mismo estilo transparente) y dispara la conexión. */
+    private class ConnectButtonEditor extends DefaultCellEditor {
+        private final JButton btn = new JButton("Entrar");
+        private int editingRow;
+
+        ConnectButtonEditor() {
+            super(new JCheckBox());
+            btn.setOpaque(true);
+            btn.setContentAreaFilled(false);
+            btn.setFont(UIConstants.FONT_SMALL.deriveFont(Font.BOLD));
+            btn.setFocusPainted(false);
+            btn.setForeground(UIConstants.ACCENT_GREEN);
+            btn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UIConstants.ACCENT_GREEN, 1),
+                    BorderFactory.createEmptyBorder(3, 10, 3, 10)));
+            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btn.addActionListener(e -> {
+                fireEditingStopped();
+                connectToServerRow(editingRow);
+            });
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable t, Object v, boolean sel, int row, int col) {
+            editingRow = row;
+            btn.setBackground(row % 2 == 0 ? UIConstants.BG_CARD : UIConstants.BG_CARD_HOVER);
+            return btn;
+        }
+
+        @Override
+        public Object getCellEditorValue() { return "Entrar"; }
     }
 
     //  FORMULARIO
