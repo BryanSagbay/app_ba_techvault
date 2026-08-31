@@ -23,9 +23,10 @@ import java.io.FileInputStream;
  * y los renderiza como texto con negrita/cursiva/tamaño aproximados. No es una
  * réplica pixel-perfect del documento, pero permite leer el contenido sin salir de la app.
  */
-public class DocxViewerPanel extends JPanel implements ViewerCloseable {
+public class DocxViewerPanel extends JPanel implements ViewerCloseable, SearchableViewer {
 
     private final XWPFDocument doc;
+    private final TextSearchSupport search;
 
     public DocxViewerPanel(File file) throws Exception {
         setLayout(new BorderLayout());
@@ -41,6 +42,7 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable {
         pane.setBorder(new EmptyBorder(24, 32, 24, 32));
 
         renderBody(pane.getStyledDocument());
+        search = new TextSearchSupport(pane);
 
         JScrollPane sp = new JScrollPane(pane);
         sp.setBorder(null);
@@ -108,4 +110,10 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable {
     public void closeResources() {
         try { doc.close(); } catch (Exception ignored) {}
     }
+
+    @Override public boolean findNext(String query) { return search.findNext(query); }
+    @Override public boolean findPrevious(String query) { return search.findPrevious(query); }
+    @Override public int getMatchCount() { return search.getMatchCount(); }
+    @Override public int getCurrentMatchIndex() { return search.getCurrentMatchIndex(); }
+    @Override public void clearHighlights() { search.clear(); }
 }

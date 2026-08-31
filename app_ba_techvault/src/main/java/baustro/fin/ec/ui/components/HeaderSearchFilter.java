@@ -26,6 +26,7 @@ public class HeaderSearchFilter extends JPanel {
     private final JTextField searchField;
     private final String placeholder;
     private final List<JComboBox<String>> combos = new ArrayList<>();
+    private JCheckBox contentToggle;
     private Runnable onChange;
 
     public HeaderSearchFilter(String searchPlaceholder, ComboConfig... filters) {
@@ -142,6 +143,31 @@ public class HeaderSearchFilter extends JPanel {
 
     public HeaderSearchFilter onChanged(Runnable r) { this.onChange = r; return this; }
 
+    /**
+     * Agrega (una sola vez) un checkbox opcional a la derecha del campo de
+     * búsqueda, por ejemplo para activar la búsqueda dentro del contenido
+     * de los archivos en vez de solo por nombre.
+     */
+    public HeaderSearchFilter withToggle(String label) {
+        if (contentToggle != null) return this;
+        contentToggle = new JCheckBox(label);
+        contentToggle.setOpaque(false);
+        contentToggle.setFont(UIConstants.FONT_SMALL);
+        contentToggle.setForeground(UIConstants.TEXT_MUTED);
+        contentToggle.setFocusPainted(false);
+        contentToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        contentToggle.addActionListener(e -> { if (onChange != null) onChange.run(); });
+        add(contentToggle, 1);
+        revalidate();
+        repaint();
+        return this;
+    }
+
+    /** true si el checkbox agregado con withToggle() está marcado. */
+    public boolean isToggleSelected() {
+        return contentToggle != null && contentToggle.isSelected();
+    }
+
     /** Texto de busqueda real (sin placeholder) */
     public String getQuery() {
         String t = searchField.getText().trim();
@@ -163,12 +189,14 @@ public class HeaderSearchFilter extends JPanel {
         searchField.setText(placeholder);
         searchField.setForeground(UIConstants.TEXT_MUTED);
         combos.forEach(c -> c.setSelectedIndex(0));
+        if (contentToggle != null) contentToggle.setSelected(false);
         if (onChange != null) onChange.run();
     }
 
     public boolean hasActiveFilters() {
         boolean searchActive = !getQuery().isEmpty();
         boolean comboActive  = combos.stream().anyMatch(c -> c.getSelectedIndex() > 0);
-        return searchActive || comboActive;
+        boolean toggleActive = contentToggle != null && contentToggle.isSelected();
+        return searchActive || comboActive || toggleActive;
     }
 }

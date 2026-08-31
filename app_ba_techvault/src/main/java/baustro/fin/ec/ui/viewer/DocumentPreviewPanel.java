@@ -5,8 +5,12 @@ import baustro.fin.ec.ui.UIConstants;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 
 /**
@@ -20,6 +24,11 @@ public class DocumentPreviewPanel extends JPanel {
     private final JPanel contentHolder = new JPanel(new BorderLayout());
     private JComponent currentViewer;
 
+    // Barra de búsqueda (Ctrl+F) dentro del documento
+    private JPanel findBar;
+    private JTextField findField;
+    private JLabel findCounter;
+
     /**
      * @param file   documento a previsualizar
      * @param onBack acción a ejecutar cuando el usuario presiona "Regresar"
@@ -28,14 +37,31 @@ public class DocumentPreviewPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(UIConstants.BG_SURFACE);
 
-        add(buildHeader(file, onBack), BorderLayout.NORTH);
+        JPanel topWrap = new JPanel(new BorderLayout());
+        topWrap.setOpaque(false);
+        topWrap.add(buildHeader(file, onBack), BorderLayout.NORTH);
+        topWrap.add(buildFindBar(), BorderLayout.SOUTH);
+        add(topWrap, BorderLayout.NORTH);
 
         contentHolder.setOpaque(true);
         contentHolder.setBackground(UIConstants.BG_SURFACE);
         add(contentHolder, BorderLayout.CENTER);
 
+        registerFindShortcut();
+
         showLoading();
         loadAsync(file);
+    }
+
+    /** Ctrl+F abre la barra de búsqueda, sin importar qué componente interno tenga el foco. */
+    private void registerFindShortcut() {
+        InputMap im = getInputMap(WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = getActionMap();
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "openFind");
+        am.put("openFind", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { showFindBar(); }
+        });
     }
 
     private JPanel buildHeader(File file, Runnable onBack) {
@@ -79,6 +105,86 @@ public class DocumentPreviewPanel extends JPanel {
         b.setFocusPainted(false);
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return b;
+    }
+
+    /** Barra de búsqueda tipo "Ctrl+F", oculta hasta que el usuario la invoca. */
+    private JPanel buildFindBar() {
+        findBar = new JPanel(new BorderLayout(10, 0));
+        findBar.setBackground(UIConstants.BG_CARD);
+        findBar.setBorder(new CompoundBorder(
+                new MatteBorder(0, 0, 1, 0, UIConstants.BORDER_LINE),
+                new EmptyBorder(8, 24, 8, 24)));
+        findBar.setVisible(false);
+
+        findField = new JTextField();
+        findField.setFont(UIConstants.FONT_BODY);
+        findField.setBackground(UIConstants.BG_SURFACE);
+        findField.setForeground(UIConstants.TEXT_1);
+        findField.setCaretColor(UIConstants.TEXT_1);
+        findField.setBorder(new CompoundBorder(
+                new LineBorder(UIConstants.BORDER_LINE, 1, true),
+                new EmptyBorder(4, 10, 4, 10)));
+
+        findCounter = new JLabel(" ");
+        findCounter.setFont(UIConstants.FONT_SMALL);
+        findCounter.setForeground(UIConstants.TEXT_2);
+        findCounter.setPreferredSize(new Dimension(90, 20));
+
+        JButton btnPrev  = ghostBtn("‹");
+        JButton btnNext  = ghostBtn("›");
+        JButton btnClose = ghostBtn("Cerrar (Esc)");
+
+        findField.addActionListener(e -> doFind(true));
+        btnNext.addActionListener(e -> doFind(true));
+        btnPrev.addActionListener(e -> doFind(false));
+        btnClose.addActionListener(e -> hideFindBar());
+
+        // Enter busca hacia adelante; Esc cierra la barra
+        findField.getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeFind");
+        findField.getActionMap().put("closeFind", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { hideFindBar(); }
+        });
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        right.setOpaque(false);
+        right.add(findCounter);
+        right.add(btnPrev);
+        right.add(btnNext);
+        right.add(btnClose);
+
+        findBar.add(findField, BorderLayout.CENTER);
+        findBar.add(right, BorderLayout.EAST);
+        return findBar;
+    }
+
+    private void showFindBar() {
+        findBar.setVisible(true);
+        revalidate();
+        findField.requestFocusInWindow();
+        findField.selectAll();
+        if (!findField.getText().isBlank()) doFind(true);
+    }
+
+    private void hideFindBar() {
+        findBar.setVisible(false);
+        if (currentViewer instanceof SearchableViewer sv) sv.clearHighlights();
+        findCounter.setText(" ");
+        revalidate();
+        requestFocusInWindow();
+    }
+
+    private void doFind(boolean forward) {
+        if (!(currentViewer instanceof SearchableViewer sv)) {
+            findCounter.setText("No disponible");
+            return;
+        }
+        String q = findField.getText();
+        if (q.isBlank()) { findCounter.setText(" "); return; }
+
+        boolean found = forward ? sv.findNext(q) : sv.findPrevious(q);
+        findCounter.setText(found
+                ? (sv.getCurrentMatchIndex() + 1) + " / " + sv.getMatchCount()
+                : "Sin resultados");
     }
 
     private void showLoading() {
