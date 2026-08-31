@@ -1,6 +1,7 @@
 package baustro.fin.ec.ui.panels;
 
 import baustro.fin.ec.ui.components.HeaderSearchFilter;
+import baustro.fin.ec.ui.viewer.DocumentPreviewPanel;
 import baustro.fin.ec.util.IconManager;
 
 import baustro.fin.ec.ui.UIConstants;
@@ -43,6 +44,13 @@ public class ManualPanel extends JPanel {
     private final List<File> allFiles = new ArrayList<>();
     private long lastDirSnapshot = -1;
 
+    // Vista previa embebida (listado ↔ vista previa dentro de la misma pestaña)
+    private static final String CARD_LIST    = "list";
+    private static final String CARD_PREVIEW = "preview";
+    private CardLayout cardLayout;
+    private JPanel cardsPanel;
+    private DocumentPreviewPanel currentPreview;
+
     private static final String MANUAL_PATH =
             "D:/USERS/" + System.getProperty("user.name") + "/Documents/2. Manuales";
 
@@ -79,9 +87,39 @@ public class ManualPanel extends JPanel {
 
     //  Construcción de UI
     private void buildUI() {
-        add(buildTopBar(),    BorderLayout.NORTH);
-        add(buildTableArea(), BorderLayout.CENTER);
-        add(buildBottomBar(), BorderLayout.SOUTH);
+        cardLayout = new CardLayout();
+        cardsPanel = new JPanel(cardLayout);
+        cardsPanel.setOpaque(false);
+
+        JPanel listView = new JPanel(new BorderLayout());
+        listView.setOpaque(false);
+        listView.add(buildTopBar(),    BorderLayout.NORTH);
+        listView.add(buildTableArea(), BorderLayout.CENTER);
+        listView.add(buildBottomBar(), BorderLayout.SOUTH);
+
+        cardsPanel.add(listView, CARD_LIST);
+        add(cardsPanel, BorderLayout.CENTER);
+    }
+
+    /** Muestra la vista previa del archivo dentro de la misma pestaña. */
+    private void showPreview(File file) {
+        if (currentPreview != null) {
+            currentPreview.closeResources();
+            cardsPanel.remove(currentPreview);
+        }
+        currentPreview = new DocumentPreviewPanel(file, this::backToList);
+        cardsPanel.add(currentPreview, CARD_PREVIEW);
+        cardLayout.show(cardsPanel, CARD_PREVIEW);
+    }
+
+    /** Vuelve al listado de archivos y libera los recursos de la vista previa. */
+    private void backToList() {
+        cardLayout.show(cardsPanel, CARD_LIST);
+        if (currentPreview != null) {
+            currentPreview.closeResources();
+            cardsPanel.remove(currentPreview);
+            currentPreview = null;
+        }
     }
 
     /** Barra superior: título + filtros */
@@ -183,12 +221,15 @@ public class ManualPanel extends JPanel {
         left.setOpaque(false);
 
         JButton btnOpen    = accentButton();
-        JButton btnRefresh = ghostButton();
+        JButton btnPreview = ghostButton("Vista previa", 130);
+        JButton btnRefresh = ghostButton("Actualizar", 120);
 
         btnOpen.addActionListener(e -> openSelected());
+        btnPreview.addActionListener(e -> previewSelected());
         btnRefresh.addActionListener(e -> loadFiles());
 
         left.add(btnOpen);
+        left.add(btnPreview);
         left.add(btnRefresh);
 
         lblCounter = new JLabel("0 archivos");
@@ -316,12 +357,17 @@ public class ManualPanel extends JPanel {
         if (tipo != null && !tipo.equalsIgnoreCase("Todos") && !tipo.isBlank())
             stream = stream.filter(f -> getExtension(f.getName()).equalsIgnoreCase(tipo));
 
-        Comparator<File> cmp = switch (sort) {
-            case "Fecha" -> Comparator.comparing(File::lastModified).reversed();
-            case "Tamaño" -> Comparator.comparing(File::length).reversed();
-            case "Nombre Z-A" -> Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER).reversed();
-            case null, default -> Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER);
-        };
+        Comparator<File> cmp;
+        if (sort == null) {
+            cmp = Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER);
+        } else {
+            switch (sort) {
+                case "Fecha": cmp = Comparator.comparing(File::lastModified).reversed(); break;
+                case "Tamaño": cmp = Comparator.comparing(File::length).reversed(); break;
+                case "Nombre Z-A": cmp = Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER).reversed(); break;
+                default: cmp = Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER); break;
+            }
+        }
 
         List<File> res = stream.sorted(cmp).toList();
         int idx = 1;
@@ -352,6 +398,15 @@ public class ManualPanel extends JPanel {
         File file = new File(MANUAL_PATH + "/" + name);
         try { Desktop.getDesktop().open(file); }
         catch (Exception ex) { JOptionPane.showMessageDialog(this, "No se pudo abrir el archivo."); }
+    }
+
+    /** Muestra el documento seleccionado en una vista previa dentro de la misma pestaña. */
+    private void previewSelected() {
+        int row = table.getSelectedRow();
+        if (row < 0) { JOptionPane.showMessageDialog(this, "Seleccione un manual."); return; }
+        String name = table.getValueAt(row, 1).toString();
+        File file = new File(MANUAL_PATH + "/" + name);
+        showPreview(file);
     }
 
     private String getExtension(String name) {
@@ -496,8 +551,8 @@ public class ManualPanel extends JPanel {
         return btn;
     }
 
-    private JButton ghostButton() {
-        JButton btn = new JButton("Actualizar") {
+    private JButton ghostButton(String text, int width) {
+        JButton btn = new JButton(text) {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -518,7 +573,7 @@ public class ManualPanel extends JPanel {
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setPreferredSize(new Dimension(120, 32));
+        btn.setPreferredSize(new Dimension(width, 32));
         return btn;
     }
 
