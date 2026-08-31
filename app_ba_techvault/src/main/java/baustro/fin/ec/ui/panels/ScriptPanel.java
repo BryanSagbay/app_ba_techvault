@@ -2,6 +2,7 @@ package baustro.fin.ec.ui.panels;
 
 import baustro.fin.ec.ui.components.HeaderSearchFilter;
 import baustro.fin.ec.ui.viewer.DocumentPreviewPanel;
+import baustro.fin.ec.util.DocumentTextExtractor;
 import baustro.fin.ec.util.IconManager;
 
 import baustro.fin.ec.ui.UIConstants;
@@ -50,6 +51,10 @@ public class ScriptPanel extends JPanel {
     private CardLayout cardLayout;
     private JPanel cardsPanel;
     private DocumentPreviewPanel currentPreview;
+
+    // Búsqueda dentro del contenido de los archivos (caché para no releer en cada tecla)
+    private final Map<String, String> contentCache = new HashMap<>();
+    private volatile boolean indexing = false;
 
     private static final String MANUAL_PATH =
             "D:/USERS/" + System.getProperty("user.name") + "/Documents/3. Scripts";
@@ -159,7 +164,8 @@ public class ScriptPanel extends JPanel {
                         new String[]{"PDF", "DOCX", "XLSX", "PPTX", "TXT"}, "Todos"),
                 new HeaderSearchFilter.ComboConfig("Ordenar",
                         new String[]{"Nombre Z-A","Fecha", "Tamaño"}, "Nombre A-Z")
-        ).onChanged(this::applyFilters);
+        ).withToggle("Buscar en contenido")
+         .onChanged(this::applyFilters);
 
         styleSearchFilter(hsf);
 
@@ -345,17 +351,57 @@ public class ScriptPanel extends JPanel {
         updateCounter();
     }
 
-    private void applyFilters() {
-        model.setRowCount(0);
-        String q    = hsf.getQuery().toLowerCase().trim();
-        String tipo = hsf.getFilter(0);
-        String sort = hsf.getFilter(1);
+    private String cacheKey(File f) { return f.getAbsolutePath() + "|" + f.lastModified(); }
 
-        Stream<File> stream = allFiles.stream();
-        if (!q.isEmpty())
-            stream = stream.filter(f -> f.getName().toLowerCase().contains(q));
-        if (tipo != null && !tipo.equalsIgnoreCase("Todos") && !tipo.isBlank())
-            stream = stream.filter(f -> getExtension(f.getName()).equalsIgnoreCase(tipo));
+    private void applyFilters() {
+        String q       = hsf.getQuery().toLowerCase().trim();
+        String tipo    = hsf.getFilter(0);
+        String sort    = hsf.getFilter(1);
+        boolean byText = hsf.isToggleSelected();
+
+        List<File> candidates = allFiles.stream()
+                .filter(f -> tipo == null || tipo.isBlank() || tipo.equalsIgnoreCase("Todos")
+                        || getExtension(f.getName()).equalsIgnoreCase(tipo))
+                .toList();
+
+        if (byText && !q.isEmpty()) {
+            List<File> pending = candidates.stream()
+                    .filter(f -> !contentCache.containsKey(cacheKey(f)))
+                    .toList();
+            if (!pending.isEmpty()) {
+                if (!indexing) {
+                    indexing = true;
+                    if (lblCounter != null) lblCounter.setText("Indexando contenido...");
+                    SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                        protected Void doInBackground() {
+                            for (File f : pending) {
+                                contentCache.put(cacheKey(f), DocumentTextExtractor.extractText(f).toLowerCase());
+                            }
+                            return null;
+                        }
+                        protected void done() {
+                            indexing = false;
+                            applyFilters();
+                        }
+                    };
+                    worker.execute();
+                }
+                return; // applyFilters() se vuelve a ejecutar cuando termine la indexación
+            }
+        }
+
+        model.setRowCount(0);
+        Stream<File> stream = candidates.stream();
+        if (!q.isEmpty()) {
+            if (byText) {
+                stream = stream.filter(f -> {
+                    String content = contentCache.get(cacheKey(f));
+                    return f.getName().toLowerCase().contains(q) || (content != null && content.contains(q));
+                });
+            } else {
+                stream = stream.filter(f -> f.getName().toLowerCase().contains(q));
+            }
+        }
 
         Comparator<File> cmp;
         if (sort == null) {
