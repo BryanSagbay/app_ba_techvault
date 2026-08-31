@@ -4,6 +4,7 @@ baustro\fin\ec\ui\panels\ProductionPanel$1.class
 baustro\fin\ec\ui\components\SearchBar$1.class
 baustro\fin\ec\ui\components\SearchPanel$1.class
 baustro\fin\ec\ui\components\HeaderSearchFilter$1.class
+baustro\fin\ec\ui\viewer\SearchableViewer.class
 baustro\fin\ec\ui\panels\DashboardPanel$4$1.class
 baustro\fin\ec\model\Contrasena.class
 baustro\fin\ec\dao\TareaDAO.class
@@ -23,10 +24,12 @@ baustro\fin\ec\ui\panels\ComandoPanel$1.class
 baustro\fin\ec\ui\ThemeManager$Theme.class
 baustro\fin\ec\ui\panels\TareaPanel$1.class
 baustro\fin\ec\model\Servidor.class
+baustro\fin\ec\ui\panels\NotaPanel$5.class
 baustro\fin\ec\ui\panels\ServidorContrasenaPanel$1.class
 baustro\fin\ec\ui\panels\ScriptPanel$2.class
 baustro\fin\ec\ui\panels\ScriptPanel$SlimScrollBarUI.class
 baustro\fin\ec\ui\components\HeaderSearchFilter$ComboConfig.class
+baustro\fin\ec\ui\viewer\DocumentPreviewPanel$2.class
 baustro\fin\ec\dao\EmergenteDAO.class
 baustro\fin\ec\ui\LoginDialog$1.class
 baustro\fin\ec\ui\UIConstants.class
@@ -39,6 +42,7 @@ baustro\fin\ec\ui\panels\TareaPanel.class
 baustro\fin\ec\security\EncryptionUtil.class
 baustro\fin\ec\ui\panels\ServidorContrasenaPanel.class
 baustro\fin\ec\ui\viewer\PptxViewerPanel$1.class
+baustro\fin\ec\ui\MainFrame$5.class
 baustro\fin\ec\ui\panels\ScriptPanel$DateRenderer.class
 baustro\fin\ec\ui\panels\ScriptPanel$IndexRenderer.class
 baustro\fin\ec\ui\panels\ProductionPanel$3.class
@@ -57,6 +61,7 @@ baustro\fin\ec\ui\panels\ScriptPanel$ModernHeaderRenderer.class
 baustro\fin\ec\ui\panels\ManualPanel$2.class
 baustro\fin\ec\ui\MainFrame$4.class
 baustro\fin\ec\dao\NotaDAO.class
+baustro\fin\ec\ui\panels\NotaPanel$6$1.class
 baustro\fin\ec\ui\viewer\PptxViewerPanel.class
 baustro\fin\ec\ui\panels\TransaccionPanel$3.class
 baustro\fin\ec\ui\panels\DashboardPanel.class
@@ -81,11 +86,14 @@ baustro\fin\ec\ui\panels\ManualPanel$ComponentConsumer.class
 baustro\fin\ec\ui\components\SearchPanel.class
 baustro\fin\ec\ui\panels\TransaccionPanel$2.class
 baustro\fin\ec\ui\panels\ManualPanel$SlimScrollBarUI.class
+baustro\fin\ec\ui\panels\ScriptPanel$6.class
 baustro\fin\ec\ui\viewer\ImageViewerPanel.class
 baustro\fin\ec\ui\MainFrame$3.class
 baustro\fin\ec\ui\panels\DashboardPanel$3.class
 baustro\fin\ec\ui\panels\ScriptPanel$BadgeRenderer.class
+baustro\fin\ec\util\DocumentTextExtractor.class
 baustro\fin\ec\ui\panels\ManualPanel$NameRenderer.class
+baustro\fin\ec\ui\panels\NotaPanel$6.class
 baustro\fin\ec\ui\panels\ManualPanel$IndexRenderer.class
 baustro\fin\ec\ui\components\StyledComponents$3.class
 baustro\fin\ec\ui\viewer\XlsxViewerPanel$1.class
@@ -114,6 +122,7 @@ baustro\fin\ec\ui\viewer\TxtViewerPanel.class
 baustro\fin\ec\ui\panels\ScriptPanel$ComponentConsumer.class
 baustro\fin\ec\ui\panels\TransaccionPanel.class
 baustro\fin\ec\ui\panels\TareaPanel$5.class
+baustro\fin\ec\ui\viewer\DocumentPreviewPanel$3.class
 baustro\fin\ec\ui\viewer\DocxViewerPanel.class
 baustro\fin\ec\ui\panels\CasoPanel$2.class
 baustro\fin\ec\ui\ThemeManager.class
@@ -139,12 +148,13 @@ baustro\fin\ec\ui\panels\NotaPanel$3.class
 baustro\fin\ec\dao\ServidorDAO.class
 baustro\fin\ec\ui\LoginDialog$StyledComponents.class
 baustro\fin\ec\ui\panels\TareaPanel$2$1.class
+baustro\fin\ec\ui\viewer\TextSearchSupport.class
 baustro\fin\ec\dao\ComandoDAO.class
 baustro\fin\ec\ui\panels\DashboardPanel$2.class
 baustro\fin\ec\ui\MainFrame.class
 baustro\fin\ec\ui\panels\ComandoPanel.class
 baustro\fin\ec\ui\panels\TareaPanel$6.class
 baustro\fin\ec\ui\components\HeaderSearchFilter$2.class
-baustro\fin\ec\ui\panels\NotaPanel$4$1.class
 baustro\fin\ec\ui\panels\ScriptPanel$SizeRenderer.class
+baustro\fin\ec\ui\panels\ManualPanel$6.class
 baustro\fin\ec\ui\MainFrame$1.class

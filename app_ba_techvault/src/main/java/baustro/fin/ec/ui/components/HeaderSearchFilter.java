@@ -114,7 +114,10 @@ public class HeaderSearchFilter extends JPanel {
             System.arraycopy(cfg.options(), 0, opts, 1, cfg.options().length);
 
             JComboBox<String> combo = new JComboBox<>(opts);
-            combo.setBackground(UIConstants.BG_SURFACE);
+            // Sin relleno propio: se funde con el fondo del header (evita el
+            // "recuadro" oscuro que pintaba antes el botón de la flecha).
+            combo.putClientProperty("JComboBox.buttonStyle", "none");
+            combo.setBackground(UIConstants.BG_CARD);
             combo.setForeground(UIConstants.TEXT_PRIMARY);
             combo.setFont(UIConstants.FONT_SMALL);
             combo.setPreferredSize(new Dimension(120, 32));
@@ -152,6 +155,10 @@ public class HeaderSearchFilter extends JPanel {
         if (contentToggle != null) return this;
         contentToggle = new JCheckBox(label);
         contentToggle.setOpaque(false);
+        // JCheckBox es un AbstractButton: opaque(false) no basta, también hay
+        // que apagar el relleno del "área de contenido" o FlatLaf sigue
+        // pintando un recuadro oscuro al pasar el mouse / enfocar.
+        contentToggle.setContentAreaFilled(false);
         contentToggle.setFont(UIConstants.FONT_SMALL);
         contentToggle.setForeground(UIConstants.TEXT_MUTED);
         contentToggle.setFocusPainted(false);
