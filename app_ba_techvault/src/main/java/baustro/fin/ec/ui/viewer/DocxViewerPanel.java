@@ -1,0 +1,111 @@
+package baustro.fin.ec.ui.viewer;
+
+import baustro.fin.ec.ui.UIConstants;
+import org.apache.poi.xwpf.usermodel.IBodyElement;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+
+/**
+ * Vista previa de DOCX: recorre párrafos y tablas del documento con Apache POI (XWPF)
+ * y los renderiza como texto con negrita/cursiva/tamaño aproximados. No es una
+ * réplica pixel-perfect del documento, pero permite leer el contenido sin salir de la app.
+ */
+public class DocxViewerPanel extends JPanel implements ViewerCloseable {
+
+    private final XWPFDocument doc;
+
+    public DocxViewerPanel(File file) throws Exception {
+        setLayout(new BorderLayout());
+        setBackground(UIConstants.BG_SURFACE);
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            doc = new XWPFDocument(fis);
+        }
+
+        JTextPane pane = new JTextPane();
+        pane.setEditable(false);
+        pane.setBackground(UIConstants.BG_CARD);
+        pane.setBorder(new EmptyBorder(24, 32, 24, 32));
+
+        renderBody(pane.getStyledDocument());
+
+        JScrollPane sp = new JScrollPane(pane);
+        sp.setBorder(null);
+        sp.getViewport().setBackground(UIConstants.BG_CARD);
+        add(sp, BorderLayout.CENTER);
+    }
+
+    private void renderBody(StyledDocument sdoc) throws Exception {
+        for (IBodyElement el : doc.getBodyElements()) {
+            if (el instanceof XWPFParagraph p) {
+                appendParagraph(sdoc, p);
+            } else if (el instanceof XWPFTable table) {
+                appendTable(sdoc, table);
+            }
+        }
+    }
+
+    private void appendParagraph(StyledDocument sdoc, XWPFParagraph p) throws Exception {
+        if (p.getRuns().isEmpty()) {
+            sdoc.insertString(sdoc.getLength(), "\n", plainStyle());
+            return;
+        }
+        for (XWPFRun run : p.getRuns()) {
+            String text = run.getText(0);
+            if (text == null) continue;
+
+            SimpleAttributeSet attrs = new SimpleAttributeSet();
+            StyleConstants.setForeground(attrs, UIConstants.TEXT_1);
+            StyleConstants.setBold(attrs, run.isBold());
+            StyleConstants.setItalic(attrs, run.isItalic());
+            StyleConstants.setUnderline(attrs, run.getUnderline() != null
+                    && run.getUnderline() != org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
+            int size = run.getFontSize();
+            StyleConstants.setFontSize(attrs, size > 0 ? Math.min(size, 28) : 12);
+            StyleConstants.setFontFamily(attrs, "Segoe UI");
+            sdoc.insertString(sdoc.getLength(), text, attrs);
+        }
+        sdoc.insertString(sdoc.getLength(), "\n", plainStyle());
+    }
+
+    private void appendTable(StyledDocument sdoc, XWPFTable table) throws Exception {
+        SimpleAttributeSet mono = new SimpleAttributeSet();
+        StyleConstants.setFontFamily(mono, "Consolas");
+        StyleConstants.setForeground(mono, UIConstants.TEXT_2);
+
+        for (XWPFTableRow row : table.getRows()) {
+            StringBuilder line = new StringBuilder();
+            for (XWPFTableCell cell : row.getTableCells()) {
+                line.append(cell.getText().replace("\n", " ")).append("  |  ");
+            }
+            sdoc.insertString(sdoc.getLength(), line + "\n", mono);
+        }
+        sdoc.insertString(sdoc.getLength(), "\n", mono);
+    }
+
+    private SimpleAttributeSet plainStyle() {
+        SimpleAttributeSet attrs = new SimpleAttributeSet();
+        StyleConstants.setForeground(attrs, UIConstants.TEXT_1);
+        StyleConstants.setFontFamily(attrs, "Segoe UI");
+        StyleConstants.setFontSize(attrs, 12);
+        return attrs;
+    }
+
+    @Override
+    public void closeResources() {
+        try { doc.close(); } catch (Exception ignored) {}
+    }
+}
