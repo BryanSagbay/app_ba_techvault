@@ -8,13 +8,18 @@ import baustro.fin.ec.util.IconManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NotaPanel extends JPanel {
+
+    private static final String SEARCH_PLACEHOLDER = "Buscar en título, contenido o etiquetas...";
 
     private final NotaDAO dao = new NotaDAO();
     private DefaultListModel<Nota> listModel;
@@ -23,6 +28,14 @@ public class NotaPanel extends JPanel {
     private JTextArea contentArea;
     private JLabel currentTitle;
     private Nota currentNota = null;
+
+    // Búsqueda dentro de la nota abierta (Ctrl+F)
+    private JPanel findBar;
+    private JTextField findField;
+    private JLabel findCounter;
+    private final List<int[]> findMatches = new ArrayList<>();
+    private int findCurrent = -1;
+    private String findLastQuery = "";
 
     public NotaPanel() {
         setLayout(new BorderLayout());
@@ -62,6 +75,7 @@ public class NotaPanel extends JPanel {
         leftPanel.setBackground(UIConstants.BG_CARD);
 
         // SearchBar con icono en la barra lateral de notas
+        // Busca por título, contenido y etiquetas (ver NotaDAO.search()).
         JPanel searchWrap = new JPanel(new BorderLayout(0,0));
         searchWrap.setBackground(UIConstants.BG_SURFACE);
         searchWrap.setBorder(BorderFactory.createCompoundBorder(
@@ -77,16 +91,33 @@ public class NotaPanel extends JPanel {
         searchField.setBackground(UIConstants.BG_SURFACE); searchField.setForeground(UIConstants.TEXT_MUTED);
         searchField.setCaretColor(UIConstants.TEXT_PRIMARY); searchField.setFont(UIConstants.FONT_BODY);
         searchField.setBorder(BorderFactory.createEmptyBorder(8,0,8,8));
-        searchField.setText("Buscar notas...");
+        searchField.setText(SEARCH_PLACEHOLDER);
+        searchField.setToolTipText("Busca en el título, el contenido y las etiquetas de las notas");
         searchField.addFocusListener(new FocusAdapter(){
-            public void focusGained(FocusEvent e){ if("Buscar notas...".equals(searchField.getText())){searchField.setText("");searchField.setForeground(UIConstants.TEXT_PRIMARY);}}
-            public void focusLost(FocusEvent e){ if(searchField.getText().isEmpty()){searchField.setText("Buscar notas...");searchField.setForeground(UIConstants.TEXT_MUTED);}}
+            public void focusGained(FocusEvent e){ if(SEARCH_PLACEHOLDER.equals(searchField.getText())){searchField.setText("");searchField.setForeground(UIConstants.TEXT_PRIMARY);}}
+            public void focusLost(FocusEvent e){ if(searchField.getText().isEmpty()){searchField.setText(SEARCH_PLACEHOLDER);searchField.setForeground(UIConstants.TEXT_MUTED);}}
         });
         searchField.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) { doSearch(); }
         });
+
+        JButton btnClearSearch = new JButton("x");
+        btnClearSearch.setFont(UIConstants.FONT_SMALL);
+        btnClearSearch.setForeground(UIConstants.TEXT_MUTED);
+        btnClearSearch.setBackground(UIConstants.BG_SURFACE);
+        btnClearSearch.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 8));
+        btnClearSearch.setFocusPainted(false);
+        btnClearSearch.setToolTipText("Limpiar búsqueda");
+        btnClearSearch.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnClearSearch.addActionListener(e -> {
+            searchField.setText(SEARCH_PLACEHOLDER);
+            searchField.setForeground(UIConstants.TEXT_MUTED);
+            doSearch();
+        });
+
         searchWrap.add(searchIco,BorderLayout.WEST);
         searchWrap.add(searchField,BorderLayout.CENTER);
+        searchWrap.add(btnClearSearch, BorderLayout.EAST);
 
         listModel = new DefaultListModel<>();
         noteList = new JList<>(listModel);
@@ -136,14 +167,147 @@ public class NotaPanel extends JPanel {
         contentArea.setBackground(UIConstants.BG_BASE);
         contentArea.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
-        rightPanel.add(editorBar, BorderLayout.NORTH);
+        JPanel topWrap = new JPanel(new BorderLayout());
+        topWrap.setOpaque(false);
+        topWrap.add(editorBar, BorderLayout.NORTH);
+        topWrap.add(buildFindBar(), BorderLayout.SOUTH);
+
+        rightPanel.add(topWrap, BorderLayout.NORTH);
         rightPanel.add(StyledComponents.darkScrollPane(contentArea), BorderLayout.CENTER);
+
+        registerFindShortcut();
 
         split.setLeftComponent(leftPanel);
         split.setRightComponent(rightPanel);
 
         add(header, BorderLayout.NORTH);
         add(split, BorderLayout.CENTER);
+    }
+
+    /** Ctrl+F abre la barra de búsqueda dentro de la nota, sin importar qué componente tenga el foco. */
+    private void registerFindShortcut() {
+        InputMap im = getInputMap(WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = getActionMap();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "openFindInNote");
+        am.put("openFindInNote", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { showFindBar(); }
+        });
+    }
+
+    /** Barra de búsqueda tipo "Ctrl+F" para buscar dentro del contenido de la nota abierta. */
+    private JPanel buildFindBar() {
+        findBar = new JPanel(new BorderLayout(10, 0));
+        findBar.setBackground(UIConstants.BG_CARD);
+        findBar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.BORDER),
+                BorderFactory.createEmptyBorder(8, 16, 8, 16)));
+        findBar.setVisible(false);
+
+        findField = new JTextField();
+        findField.setFont(UIConstants.FONT_BODY);
+        findField.setBackground(UIConstants.BG_SURFACE);
+        findField.setForeground(UIConstants.TEXT_PRIMARY);
+        findField.setCaretColor(UIConstants.TEXT_PRIMARY);
+        findField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIConstants.BORDER, 1, true),
+                BorderFactory.createEmptyBorder(4, 10, 4, 10)));
+
+        findCounter = new JLabel(" ");
+        findCounter.setFont(UIConstants.FONT_SMALL);
+        findCounter.setForeground(UIConstants.TEXT_MUTED);
+        findCounter.setPreferredSize(new Dimension(90, 20));
+
+        JButton btnPrev = ghostFindBtn("‹");
+        JButton btnNext = ghostFindBtn("›");
+        JButton btnClose = ghostFindBtn("Cerrar (Esc)");
+
+        findField.addActionListener(e -> doFindInNote(true));
+        btnNext.addActionListener(e -> doFindInNote(true));
+        btnPrev.addActionListener(e -> doFindInNote(false));
+        btnClose.addActionListener(e -> hideFindBar());
+
+        // Enter busca hacia adelante; Esc cierra la barra
+        findField.getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeFindInNote");
+        findField.getActionMap().put("closeFindInNote", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { hideFindBar(); }
+        });
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        right.setOpaque(false);
+        right.add(findCounter);
+        right.add(btnPrev);
+        right.add(btnNext);
+        right.add(btnClose);
+
+        findBar.add(findField, BorderLayout.CENTER);
+        findBar.add(right, BorderLayout.EAST);
+        return findBar;
+    }
+
+    private JButton ghostFindBtn(String text) {
+        JButton b = new JButton(text);
+        b.setFont(UIConstants.FONT_SMALL);
+        b.setForeground(UIConstants.TEXT_SECONDARY);
+        b.setBackground(UIConstants.BG_BASE);
+        b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return b;
+    }
+
+    private void showFindBar() {
+        if (currentNota == null) return; // no hay nota abierta donde buscar
+        findBar.setVisible(true);
+        revalidate();
+        findField.requestFocusInWindow();
+        findField.selectAll();
+        if (!findField.getText().isBlank()) doFindInNote(true);
+    }
+
+    private void hideFindBar() {
+        findBar.setVisible(false);
+        clearFindHighlights();
+        revalidate();
+        contentArea.requestFocusInWindow();
+    }
+
+    private void doFindInNote(boolean forward) {
+        String q = findField.getText();
+        if (q.isBlank()) { findCounter.setText(" "); clearFindHighlights(); return; }
+
+        if (!q.equalsIgnoreCase(findLastQuery)) recomputeFindMatches(q);
+
+        if (findMatches.isEmpty()) {
+            findCounter.setText("Sin resultados");
+            return;
+        }
+        findCurrent = forward
+                ? (findCurrent + 1) % findMatches.size()
+                : (findCurrent - 1 + findMatches.size()) % findMatches.size();
+
+        int[] m = findMatches.get(findCurrent);
+        contentArea.select(m[0], m[1]);
+        findCounter.setText((findCurrent + 1) + " / " + findMatches.size());
+    }
+
+    private void recomputeFindMatches(String query) {
+        findMatches.clear();
+        findCurrent = -1;
+        findLastQuery = query;
+
+        String text = contentArea.getText().toLowerCase();
+        String q = query.toLowerCase();
+        int idx = 0;
+        while ((idx = text.indexOf(q, idx)) >= 0) {
+            findMatches.add(new int[]{idx, idx + q.length()});
+            idx += q.length();
+        }
+    }
+
+    private void clearFindHighlights() {
+        contentArea.select(0, 0);
+        findMatches.clear();
+        findCurrent = -1;
+        findLastQuery = "";
     }
 
     private DefaultListCellRenderer noteCellRenderer() {
@@ -259,7 +423,7 @@ public class NotaPanel extends JPanel {
 
     private void doSearch() {
         String raw = searchField.getText().trim();
-        String q = raw.equals("Buscar notas...") ? "" : raw;
+        String q = raw.equals(SEARCH_PLACEHOLDER) ? "" : raw;
         try {
             List<Nota> result = q.isEmpty() ? dao.findAll() : dao.search(q);
             listModel.clear();
@@ -274,6 +438,8 @@ public class NotaPanel extends JPanel {
         currentTitle.setForeground(UIConstants.TEXT_PRIMARY);
         contentArea.setText(nota.getContenido());
         contentArea.setCaretPosition(0);
+        if (findBar.isVisible()) hideFindBar();
+        else clearFindHighlights();
     }
 
     private void newNota() {
@@ -317,6 +483,7 @@ public class NotaPanel extends JPanel {
                 currentTitle.setText("Seleccione o cree una nota");
                 currentTitle.setForeground(UIConstants.TEXT_SECONDARY);
                 contentArea.setText("");
+                if (findBar.isVisible()) hideFindBar(); else clearFindHighlights();
                 loadData();
             } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage()); }
         }

@@ -197,15 +197,73 @@ public class MainFrame extends JFrame {
         themeToggleLabel.setFont(UIConstants.FONT_SMALL);
         themeToggleLabel.setForeground(UIConstants.TEXT_SECONDARY);
         themeToggleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
         themeToggleLabel.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e)  { toggleTheme(); }
-            @Override public void mouseEntered(MouseEvent e)  { themeToggleLabel.setForeground(UIConstants.TEAL_PRIMARY); }
-            @Override public void mouseExited(MouseEvent e)   { themeToggleLabel.setForeground(UIConstants.TEXT_SECONDARY); }
+            @Override public void mouseClicked(MouseEvent e) { toggleTheme(); }
+            @Override public void mouseEntered(MouseEvent e) { themeToggleLabel.setForeground(UIConstants.TEAL_PRIMARY); }
+            @Override public void mouseExited(MouseEvent e) { themeToggleLabel.setForeground(UIConstants.TEXT_SECONDARY); }
         });
 
         row.add(themeToggleLabel, BorderLayout.CENTER);
+
+        // Contenedor derecho: separador vertical + botón de logout
+        JPanel rightGroup = new JPanel(new BorderLayout(3, 0));
+        rightGroup.setBackground(UIConstants.BG_CARD);
+        rightGroup.add(buildVerticalSeparator(), BorderLayout.WEST);
+        rightGroup.add(buildLogoutButton(), BorderLayout.EAST);
+
+        row.add(rightGroup, BorderLayout.EAST);
         return row;
+    }
+
+    /** Línea vertical delgada usada como separador visual entre el toggle de tema y el logout. */
+    private JComponent buildVerticalSeparator() {
+        JPanel sep = new JPanel();
+        sep.setBackground(UIConstants.BORDER_SUBTLE);
+        sep.setPreferredSize(new Dimension(1, 20));
+        sep.setMaximumSize(new Dimension(1, 20));
+        return sep;
+    }
+
+    /** Botón (solo ícono) para cerrar sesión y volver a la pantalla de contraseña. */
+    private JLabel buildLogoutButton() {
+        JLabel lbl = new JLabel();
+        ImageIcon logoutIcon = IconManager.getIcon(IconManager.ICON_LOGOUT, 16);
+        if (logoutIcon != null && logoutIcon.getIconWidth() > 1) {
+            lbl.setIcon(logoutIcon);
+        } else {
+            lbl.setText("⏻");
+            lbl.setFont(UIConstants.FONT_SMALL);
+            lbl.setForeground(UIConstants.TEXT_SECONDARY);
+        }
+        lbl.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+        lbl.setToolTipText("Cerrar sesión");
+        lbl.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        lbl.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { logout(); }
+            @Override public void mouseEntered(MouseEvent e) { lbl.setForeground(UIConstants.ACCENT_RED); }
+            @Override public void mouseExited(MouseEvent e)  { lbl.setForeground(UIConstants.TEXT_SECONDARY); }
+        });
+        return lbl;
+    }
+
+    /** Cierra la sesión actual y vuelve a mostrar la pantalla de contraseña (LoginDialog). */
+    private void logout() {
+        int ok = JOptionPane.showConfirmDialog(this,
+                "¿Deseas cerrar sesión?", "Cerrar sesión",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (ok != JOptionPane.YES_OPTION) return;
+
+        dispose();
+        SwingUtilities.invokeLater(() -> {
+            LoginDialog login = new LoginDialog();
+            login.setVisible(true);
+            if (!login.isAuthenticated()) {
+                System.exit(0);
+                return;
+            }
+            MainFrame frame = new MainFrame();
+            frame.setVisible(true);
+        });
     }
 
     private void toggleTheme() {

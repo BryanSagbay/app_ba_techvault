@@ -39,6 +39,7 @@ public class IconManager {
     public static final String ICON_SUN  = "sol";
     public static final String ICON_CASO = "casos";
     public static final String ICON_OPEN = "abrir";
+    public static final String ICON_LOGOUT = "logout";
 
     public static ImageIcon getIcon(String name, int size) {
         String key = name + "_" + size;
