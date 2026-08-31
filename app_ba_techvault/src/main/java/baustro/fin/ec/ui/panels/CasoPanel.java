@@ -215,7 +215,8 @@ public class CasoPanel extends JPanel {
         ).toList();
 
         if ("Más antiguo primero".equals(ord)) {
-            res = res.reversed();
+            res = new ArrayList<>(res);
+            Collections.reverse(res);
         }
         return res;
     }
