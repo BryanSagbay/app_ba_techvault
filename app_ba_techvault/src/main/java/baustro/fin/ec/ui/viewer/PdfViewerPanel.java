@@ -4,15 +4,18 @@ import baustro.fin.ec.ui.UIConstants;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Vista previa de PDF: renderiza página por página con PDFBox, con navegación Anterior/Siguiente. */
-public class PdfViewerPanel extends JPanel implements ViewerCloseable {
+public class PdfViewerPanel extends JPanel implements ViewerCloseable, SearchableViewer {
 
     private final PDDocument document;
     private final PDFRenderer renderer;
@@ -23,6 +26,13 @@ public class PdfViewerPanel extends JPanel implements ViewerCloseable {
     private final JLabel pageLabel  = new JLabel();
     private JButton btnPrev;
     private JButton btnNext;
+
+    // Búsqueda (Ctrl+F): como cada página se renderiza como imagen, se salta
+    // a la página que contiene la coincidencia (extraída con PDFTextStripper).
+    private String[] pageTexts;
+    private final List<Integer> matchPages = new ArrayList<>();
+    private int currentMatch = -1;
+    private String lastQuery = "";
 
     public PdfViewerPanel(File file) throws Exception {
         setLayout(new BorderLayout());
@@ -105,5 +115,63 @@ public class PdfViewerPanel extends JPanel implements ViewerCloseable {
     @Override
     public void closeResources() {
         try { document.close(); } catch (Exception ignored) {}
+    }
+
+    /** Extrae el texto de cada página una sola vez (bajo demanda, al buscar por primera vez). */
+    private void ensurePageTexts() {
+        if (pageTexts != null) return;
+        pageTexts = new String[pageCount];
+        try {
+            PDFTextStripper stripper = new PDFTextStripper();
+            for (int i = 0; i < pageCount; i++) {
+                stripper.setStartPage(i + 1);
+                stripper.setEndPage(i + 1);
+                pageTexts[i] = stripper.getText(document).toLowerCase();
+            }
+        } catch (Exception ex) {
+            // Si falla la extracción (PDF escaneado/protegido), la búsqueda simplemente no encuentra nada
+            pageTexts = new String[pageCount];
+        }
+    }
+
+    private void recomputeMatches(String query) {
+        matchPages.clear();
+        currentMatch = -1;
+        lastQuery = query;
+        if (query == null || query.isBlank()) return;
+
+        ensurePageTexts();
+        String q = query.toLowerCase();
+        for (int i = 0; i < pageTexts.length; i++) {
+            if (pageTexts[i] != null && pageTexts[i].contains(q)) matchPages.add(i);
+        }
+    }
+
+    @Override
+    public boolean findNext(String query) {
+        if (!query.equalsIgnoreCase(lastQuery)) recomputeMatches(query);
+        if (matchPages.isEmpty()) return false;
+        currentMatch = (currentMatch + 1) % matchPages.size();
+        renderPage(matchPages.get(currentMatch));
+        return true;
+    }
+
+    @Override
+    public boolean findPrevious(String query) {
+        if (!query.equalsIgnoreCase(lastQuery)) recomputeMatches(query);
+        if (matchPages.isEmpty()) return false;
+        currentMatch = (currentMatch - 1 + matchPages.size()) % matchPages.size();
+        renderPage(matchPages.get(currentMatch));
+        return true;
+    }
+
+    @Override public int getMatchCount() { return matchPages.size(); }
+    @Override public int getCurrentMatchIndex() { return currentMatch; }
+
+    @Override
+    public void clearHighlights() {
+        matchPages.clear();
+        currentMatch = -1;
+        lastQuery = "";
     }
 }

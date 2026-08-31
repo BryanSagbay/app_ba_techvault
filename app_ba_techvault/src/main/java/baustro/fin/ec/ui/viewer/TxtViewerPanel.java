@@ -10,7 +10,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 /** Vista previa simple para archivos de texto plano (TXT, LOG, SQL, JSON, etc.). */
-public class TxtViewerPanel extends JPanel {
+public class TxtViewerPanel extends JPanel implements SearchableViewer {
+
+    private final JTextArea area;
+    private final TextSearchSupport search;
 
     public TxtViewerPanel(File file) throws Exception {
         setLayout(new BorderLayout());
@@ -24,7 +27,7 @@ public class TxtViewerPanel extends JPanel {
             text = Files.readString(file.toPath(), StandardCharsets.ISO_8859_1);
         }
 
-        JTextArea area = new JTextArea(text);
+        area = new JTextArea(text);
         area.setEditable(false);
         area.setFont(UIConstants.FONT_MONO);
         area.setBackground(UIConstants.BG_CARD);
@@ -33,10 +36,17 @@ public class TxtViewerPanel extends JPanel {
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
         area.setBorder(new EmptyBorder(16, 20, 16, 20));
+        search = new TextSearchSupport(area);
 
         JScrollPane sp = new JScrollPane(area);
         sp.setBorder(null);
         sp.getViewport().setBackground(UIConstants.BG_CARD);
         add(sp, BorderLayout.CENTER);
     }
+
+    @Override public boolean findNext(String query) { return search.findNext(query); }
+    @Override public boolean findPrevious(String query) { return search.findPrevious(query); }
+    @Override public int getMatchCount() { return search.getMatchCount(); }
+    @Override public int getCurrentMatchIndex() { return search.getCurrentMatchIndex(); }
+    @Override public void clearHighlights() { search.clear(); }
 }

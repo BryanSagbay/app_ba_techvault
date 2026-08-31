@@ -2,7 +2,9 @@ package baustro.fin.ec.ui.viewer;
 
 import baustro.fin.ec.ui.UIConstants;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
+import org.apache.poi.xslf.usermodel.XSLFShape;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
+import org.apache.poi.xslf.usermodel.XSLFTextShape;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,10 +12,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Vista previa de PPTX: renderiza cada diapositiva a imagen con Apache POI (XSLF). */
-public class PptxViewerPanel extends JPanel implements ViewerCloseable {
+public class PptxViewerPanel extends JPanel implements ViewerCloseable, SearchableViewer {
 
     private final XMLSlideShow ppt;
     private final List<XSLFSlide> slides;
@@ -24,6 +27,13 @@ public class PptxViewerPanel extends JPanel implements ViewerCloseable {
     private final JLabel pageLabel  = new JLabel();
     private JButton btnPrev;
     private JButton btnNext;
+
+    // Búsqueda (Ctrl+F): cada diapositiva se renderiza como imagen, así que
+    // se salta a la diapositiva que contiene la coincidencia.
+    private String[] slideTexts;
+    private final List<Integer> matchSlides = new ArrayList<>();
+    private int currentMatch = -1;
+    private String lastQuery = "";
 
     public PptxViewerPanel(File file) throws Exception {
         setLayout(new BorderLayout());
@@ -118,5 +128,61 @@ public class PptxViewerPanel extends JPanel implements ViewerCloseable {
     @Override
     public void closeResources() {
         try { ppt.close(); } catch (Exception ignored) {}
+    }
+
+    /** Extrae el texto de cada diapositiva una sola vez (bajo demanda, al buscar por primera vez). */
+    private void ensureSlideTexts() {
+        if (slideTexts != null) return;
+        slideTexts = new String[slides.size()];
+        for (int i = 0; i < slides.size(); i++) {
+            StringBuilder sb = new StringBuilder();
+            for (XSLFShape shape : slides.get(i).getShapes()) {
+                if (shape instanceof XSLFTextShape ts) {
+                    sb.append(ts.getText()).append('\n');
+                }
+            }
+            slideTexts[i] = sb.toString().toLowerCase();
+        }
+    }
+
+    private void recomputeMatches(String query) {
+        matchSlides.clear();
+        currentMatch = -1;
+        lastQuery = query;
+        if (query == null || query.isBlank()) return;
+
+        ensureSlideTexts();
+        String q = query.toLowerCase();
+        for (int i = 0; i < slideTexts.length; i++) {
+            if (slideTexts[i] != null && slideTexts[i].contains(q)) matchSlides.add(i);
+        }
+    }
+
+    @Override
+    public boolean findNext(String query) {
+        if (!query.equalsIgnoreCase(lastQuery)) recomputeMatches(query);
+        if (matchSlides.isEmpty()) return false;
+        currentMatch = (currentMatch + 1) % matchSlides.size();
+        renderSlide(matchSlides.get(currentMatch));
+        return true;
+    }
+
+    @Override
+    public boolean findPrevious(String query) {
+        if (!query.equalsIgnoreCase(lastQuery)) recomputeMatches(query);
+        if (matchSlides.isEmpty()) return false;
+        currentMatch = (currentMatch - 1 + matchSlides.size()) % matchSlides.size();
+        renderSlide(matchSlides.get(currentMatch));
+        return true;
+    }
+
+    @Override public int getMatchCount() { return matchSlides.size(); }
+    @Override public int getCurrentMatchIndex() { return currentMatch; }
+
+    @Override
+    public void clearHighlights() {
+        matchSlides.clear();
+        currentMatch = -1;
+        lastQuery = "";
     }
 }
