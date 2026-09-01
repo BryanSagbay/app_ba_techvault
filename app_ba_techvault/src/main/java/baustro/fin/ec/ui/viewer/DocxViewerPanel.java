@@ -17,7 +17,10 @@ import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
-
+import org.apache.poi.xwpf.usermodel.XWPFPicture;
+import javax.imageio.ImageIO;
+import java.io.ByteArrayInputStream;
+import java.awt.image.BufferedImage;
 /**
  * Vista previa de DOCX: recorre párrafos y tablas del documento con Apache POI (XWPF)
  * y los renderiza como texto con negrita/cursiva/tamaño aproximados. No es una
@@ -41,7 +44,7 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         pane.setBackground(UIConstants.BG_CARD);
         pane.setBorder(new EmptyBorder(24, 32, 24, 32));
 
-        renderBody(pane.getStyledDocument());
+        renderBody(pane);
         search = new TextSearchSupport(pane);
 
         JScrollPane sp = new JScrollPane(pane);
@@ -50,22 +53,27 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         add(sp, BorderLayout.CENTER);
     }
 
-    private void renderBody(StyledDocument sdoc) throws Exception {
+    private void renderBody(JTextPane pane) throws Exception {
         for (IBodyElement el : doc.getBodyElements()) {
             if (el instanceof XWPFParagraph p) {
-                appendParagraph(sdoc, p);
+                appendParagraph(pane, p);
             } else if (el instanceof XWPFTable table) {
-                appendTable(sdoc, table);
+                appendTable(pane.getStyledDocument(), table);
             }
         }
     }
 
-    private void appendParagraph(StyledDocument sdoc, XWPFParagraph p) throws Exception {
+    private void appendParagraph(JTextPane pane, XWPFParagraph p) throws Exception {
+        StyledDocument sdoc = pane.getStyledDocument();
         if (p.getRuns().isEmpty()) {
             sdoc.insertString(sdoc.getLength(), "\n", plainStyle());
             return;
         }
         for (XWPFRun run : p.getRuns()) {
+            for (XWPFPicture pic : run.getEmbeddedPictures()) {
+                insertPicture(pane, pic);
+            }
+
             String text = run.getText(0);
             if (text == null) continue;
 
@@ -81,6 +89,30 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable, Searchab
             sdoc.insertString(sdoc.getLength(), text, attrs);
         }
         sdoc.insertString(sdoc.getLength(), "\n", plainStyle());
+    }
+
+    /** Decodifica la imagen incrustada del run y la inserta en el visor, escalada si es muy ancha. */
+    private void insertPicture(JTextPane pane, XWPFPicture pic) {
+        try {
+            byte[] bytes = pic.getPictureData().getData();
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
+            if (img == null) return;
+
+            int maxWidth = 480;
+            int w = img.getWidth(), h = img.getHeight();
+            if (w > maxWidth) {
+                h = Math.round(h * (maxWidth / (float) w));
+                w = maxWidth;
+            }
+            Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+
+            StyledDocument sdoc = pane.getStyledDocument();
+            pane.setCaretPosition(sdoc.getLength());
+            pane.insertIcon(new ImageIcon(scaled));
+            sdoc.insertString(sdoc.getLength(), "\n", plainStyle());
+        } catch (Exception ignored) {
+            // si la imagen no se puede decodificar, se omite sin romper la vista previa
+        }
     }
 
     private void appendTable(StyledDocument sdoc, XWPFTable table) throws Exception {
