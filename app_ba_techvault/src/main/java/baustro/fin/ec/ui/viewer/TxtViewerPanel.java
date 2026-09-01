@@ -49,4 +49,6 @@ public class TxtViewerPanel extends JPanel implements SearchableViewer {
     @Override public int getMatchCount() { return search.getMatchCount(); }
     @Override public int getCurrentMatchIndex() { return search.getCurrentMatchIndex(); }
     @Override public void clearHighlights() { search.clear(); }
+    @Override public String getMatchedText() { return search.getMatchedText(); }
+
 }

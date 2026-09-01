@@ -22,4 +22,7 @@ public interface SearchableViewer {
 
     /** Limpia la selección/resaltado y el estado de búsqueda. */
     void clearHighlights();
+
+    /** Texto real que corresponde a la coincidencia actual (para depurar desalineamientos). */
+    default String getMatchedText() { return ""; }
 }

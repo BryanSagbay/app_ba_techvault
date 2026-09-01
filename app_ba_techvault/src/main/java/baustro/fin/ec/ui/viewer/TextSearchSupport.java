@@ -31,6 +31,13 @@ final class TextSearchSupport {
         this.comp = comp;
     }
 
+    /**
+     * Busca coincidencias comparando carácter por carácter (regionMatches),
+     * SIN pasar el texto completo a minúsculas. Esto es a propósito: hacer
+     * String.toLowerCase() sobre todo el documento puede cambiar la cantidad
+     * de caracteres con ciertos símbolos, desalineando los índices de todo
+     * lo que viene después y pintando texto que no tiene nada que ver.
+     */
     private void recompute(String query) {
         matches.clear();
         current = -1;
@@ -39,7 +46,8 @@ final class TextSearchSupport {
 
         String text = comp.getText();
         int qLen = query.length();
-        for (int i = 0; i + qLen <= text.length(); i++) {
+        int limit = text.length() - qLen;
+        for (int i = 0; i <= limit; i++) {
             if (text.regionMatches(true, i, query, 0, qLen)) {
                 matches.add(new int[]{i, i + qLen});
             }
@@ -62,15 +70,18 @@ final class TextSearchSupport {
         return true;
     }
 
-    /** Pinta de amarillo todas las coincidencias y de ámbar la actual, con scroll hasta ella. */
     private void applyHighlights() {
         Highlighter hl = comp.getHighlighter();
         hl.removeAllHighlights();
-        try {
-            for (int i = 0; i < matches.size(); i++) {
-                int[] m = matches.get(i);
+        for (int i = 0; i < matches.size(); i++) {
+            int[] m = matches.get(i);
+            try {
                 hl.addHighlight(m[0], m[1], i == current ? PAINTER_CURRENT : PAINTER);
+            } catch (BadLocationException ex) {
+                // si UNA coincidencia falla, seguimos con las demás en vez de abortar todo el resaltado
             }
+        }
+        try {
             int[] cur = matches.get(current);
             comp.setCaretPosition(cur[0]);
             Rectangle r = comp.modelToView2D(cur[0]).getBounds();
@@ -81,6 +92,16 @@ final class TextSearchSupport {
     int getMatchCount() { return matches.size(); }
 
     int getCurrentMatchIndex() { return current; }
+
+    String getMatchedText() {
+        if (current < 0 || current >= matches.size()) return "";
+        int[] m = matches.get(current);
+        try {
+            return comp.getDocument().getText(m[0], m[1] - m[0]);
+        } catch (BadLocationException e) {
+            return "";
+        }
+    }
 
     void clear() {
         comp.getHighlighter().removeAllHighlights();

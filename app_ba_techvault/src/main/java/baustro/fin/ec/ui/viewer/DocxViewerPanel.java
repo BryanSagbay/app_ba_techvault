@@ -148,4 +148,6 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable, Searchab
     @Override public int getMatchCount() { return search.getMatchCount(); }
     @Override public int getCurrentMatchIndex() { return search.getCurrentMatchIndex(); }
     @Override public void clearHighlights() { search.clear(); }
+    @Override public String getMatchedText() { return search.getMatchedText(); }
+
 }
