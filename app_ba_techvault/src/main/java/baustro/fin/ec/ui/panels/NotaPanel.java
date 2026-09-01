@@ -7,6 +7,9 @@ import baustro.fin.ec.ui.components.StyledComponents;
 import baustro.fin.ec.util.IconManager;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
@@ -270,6 +273,12 @@ public class NotaPanel extends JPanel {
         contentArea.requestFocusInWindow();
     }
 
+    // Resaltado de coincidencias: amarillo para todas, ámbar más intenso para la actual.
+    private static final Highlighter.HighlightPainter FIND_PAINTER =
+            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 235, 59));
+    private static final Highlighter.HighlightPainter FIND_PAINTER_CURRENT =
+            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 160, 0));
+
     private void doFindInNote(boolean forward) {
         String q = findField.getText();
         if (q.isBlank()) { findCounter.setText(" "); clearFindHighlights(); return; }
@@ -278,15 +287,37 @@ public class NotaPanel extends JPanel {
 
         if (findMatches.isEmpty()) {
             findCounter.setText("Sin resultados");
+            contentArea.getHighlighter().removeAllHighlights();
             return;
         }
         findCurrent = forward
                 ? (findCurrent + 1) % findMatches.size()
                 : (findCurrent - 1 + findMatches.size()) % findMatches.size();
 
+        applyFindHighlights();
         int[] m = findMatches.get(findCurrent);
-        contentArea.select(m[0], m[1]);
+        contentArea.setCaretPosition(m[0]);
+        scrollToMatch(m[0]);
         findCounter.setText((findCurrent + 1) + " / " + findMatches.size());
+    }
+
+    /** Pinta de amarillo todas las coincidencias; la actual queda en ámbar. */
+    private void applyFindHighlights() {
+        Highlighter hl = contentArea.getHighlighter();
+        hl.removeAllHighlights();
+        try {
+            for (int i = 0; i < findMatches.size(); i++) {
+                int[] m = findMatches.get(i);
+                hl.addHighlight(m[0], m[1], i == findCurrent ? FIND_PAINTER_CURRENT : FIND_PAINTER);
+            }
+        } catch (BadLocationException ignored) {}
+    }
+
+    private void scrollToMatch(int pos) {
+        try {
+            Rectangle r = contentArea.modelToView2D(pos).getBounds();
+            if (r != null) contentArea.scrollRectToVisible(r);
+        } catch (BadLocationException ignored) {}
     }
 
     private void recomputeFindMatches(String query) {
@@ -304,7 +335,7 @@ public class NotaPanel extends JPanel {
     }
 
     private void clearFindHighlights() {
-        contentArea.select(0, 0);
+        contentArea.getHighlighter().removeAllHighlights();
         findMatches.clear();
         findCurrent = -1;
         findLastQuery = "";
