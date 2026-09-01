@@ -325,12 +325,12 @@ public class NotaPanel extends JPanel {
         findCurrent = -1;
         findLastQuery = query;
 
-        String text = contentArea.getText().toLowerCase();
-        String q = query.toLowerCase();
-        int idx = 0;
-        while ((idx = text.indexOf(q, idx)) >= 0) {
-            findMatches.add(new int[]{idx, idx + q.length()});
-            idx += q.length();
+        String text = contentArea.getText();
+        int qLen = query.length();
+        for (int i = 0; i + qLen <= text.length(); i++) {
+            if (text.regionMatches(true, i, query, 0, qLen)) {
+                findMatches.add(new int[]{i, i + qLen});
+            }
         }
     }
 
