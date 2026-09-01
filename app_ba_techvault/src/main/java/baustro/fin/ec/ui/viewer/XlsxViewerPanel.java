@@ -45,7 +45,7 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         DataFormatter fmt = new DataFormatter();
         for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
             Sheet sheet = workbook.getSheetAt(s);
-            tabs.addTab(sheet.getSheetName(), buildSheetTable(sheet, fmt));
+            tabs.addTab(sheet.getSheetName(), buildSheetTable(sheet, fmt, s));
         }
 
         if (tabs.getTabCount() == 0) {
@@ -57,7 +57,7 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         }
     }
 
-    private JScrollPane buildSheetTable(Sheet sheet, DataFormatter fmt) {
+    private JScrollPane buildSheetTable(Sheet sheet, DataFormatter fmt, int sheetIndex) {
         int maxCols = 0;
         for (Row row : sheet) {
             maxCols = Math.max(maxCols, row.getLastCellNum());
@@ -86,12 +86,54 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         table.setSelectionBackground(UIConstants.BG_ROW_SEL);
         table.getTableHeader().setBackground(UIConstants.BG_SURFACE);
         table.getTableHeader().setForeground(UIConstants.TEXT_2);
+        table.setDefaultRenderer(Object.class, new HighlightCellRenderer(sheetIndex));
         sheetTables.add(table);
 
         JScrollPane sp = new JScrollPane(table);
         sp.getViewport().setBackground(UIConstants.BG_CARD);
         sp.setBorder(null);
         return sp;
+    }
+
+    /** Pinta de amarillo las celdas que coinciden con la búsqueda y de ámbar la actual. */
+    private class HighlightCellRenderer extends DefaultTableCellRenderer {
+        private final int sheetIndex;
+
+        HighlightCellRenderer(int sheetIndex) { this.sheetIndex = sheetIndex; }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                         boolean hasFocus, int row, int col) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+            if (isCurrentMatch(sheetIndex, row, col)) {
+                c.setBackground(MATCH_COLOR_CURRENT);
+                c.setForeground(Color.BLACK);
+            } else if (isMatch(sheetIndex, row, col)) {
+                c.setBackground(MATCH_COLOR);
+                c.setForeground(Color.BLACK);
+            } else if (!isSelected) {
+                c.setBackground(UIConstants.BG_CARD);
+                c.setForeground(UIConstants.TEXT_1);
+            }
+            return c;
+        }
+    }
+
+    private boolean isMatch(int sheetIndex, int row, int col) {
+        for (int[] m : matches) {
+            if (m[0] == sheetIndex && m[1] == row && m[2] == col) return true;
+        }
+        return false;
+    }
+
+    private boolean isCurrentMatch(int sheetIndex, int row, int col) {
+        if (current < 0 || current >= matches.size()) return false;
+        int[] m = matches.get(current);
+        return m[0] == sheetIndex && m[1] == row && m[2] == col;
+    }
+
+    private void repaintTables() {
+        for (JTable t : sheetTables) t.repaint();
     }
 
     /** 0 -> "A", 1 -> "B", ... 26 -> "AA" ... */
@@ -115,7 +157,7 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         matches.clear();
         current = -1;
         lastQuery = query;
-        if (query == null || query.isBlank()) return;
+        if (query == null || query.isBlank()) { repaintTables(); return; }
 
         String q = query.toLowerCase();
         for (int s = 0; s < sheetTables.size(); s++) {
@@ -135,14 +177,14 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         int[] m = matches.get(current);
         tabs.setSelectedIndex(m[0]);
         JTable t = sheetTables.get(m[0]);
-        t.changeSelection(m[1], m[2], false, false);
         t.scrollRectToVisible(t.getCellRect(m[1], m[2], true));
+        repaintTables();
     }
 
     @Override
     public boolean findNext(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
-        if (matches.isEmpty()) return false;
+        if (matches.isEmpty()) { repaintTables(); return false; }
         current = (current + 1) % matches.size();
         goToMatch();
         return true;
@@ -151,7 +193,7 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
     @Override
     public boolean findPrevious(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
-        if (matches.isEmpty()) return false;
+        if (matches.isEmpty()) { repaintTables(); return false; }
         current = (current - 1 + matches.size()) % matches.size();
         goToMatch();
         return true;
@@ -165,5 +207,6 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         matches.clear();
         current = -1;
         lastQuery = "";
+        repaintTables();
     }
 }
