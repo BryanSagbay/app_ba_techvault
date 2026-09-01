@@ -206,7 +206,7 @@ public class MainFrame extends JFrame {
         row.add(themeToggleLabel, BorderLayout.CENTER);
 
         // Contenedor derecho: separador vertical + botón de logout
-        JPanel rightGroup = new JPanel(new BorderLayout(3, 0));
+        JPanel rightGroup = new JPanel(new BorderLayout(10, 0));
         rightGroup.setBackground(UIConstants.BG_CARD);
         rightGroup.add(buildVerticalSeparator(), BorderLayout.WEST);
         rightGroup.add(buildLogoutButton(), BorderLayout.EAST);
