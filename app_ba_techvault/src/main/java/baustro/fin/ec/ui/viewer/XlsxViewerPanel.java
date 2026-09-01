@@ -9,6 +9,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
@@ -18,6 +19,9 @@ import java.util.List;
 
 /** Vista previa de XLSX: cada hoja se muestra como una tabla en una pestaña. */
 public class XlsxViewerPanel extends JPanel implements ViewerCloseable, SearchableViewer {
+
+    private static final Color MATCH_COLOR = new Color(255, 235, 59);
+    private static final Color MATCH_COLOR_CURRENT = new Color(255, 160, 0);
 
     private final Workbook workbook;
     private final JTabbedPane tabs = new JTabbedPane();
