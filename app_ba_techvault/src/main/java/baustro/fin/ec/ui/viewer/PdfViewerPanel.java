@@ -5,17 +5,25 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Vista previa de PDF: renderiza página por página con PDFBox, con navegación Anterior/Siguiente. */
 public class PdfViewerPanel extends JPanel implements ViewerCloseable, SearchableViewer {
+
+    /** DPI usado para renderizar cada página como imagen (debe coincidir con renderPage). */
+    private static final int RENDER_DPI = 120;
+    private static final float SCALE = RENDER_DPI / 72f;
+    private static final Color MATCH_COLOR = new Color(255, 235, 59, 130);
 
     private final PDDocument document;
     private final PDFRenderer renderer;
@@ -28,8 +36,10 @@ public class PdfViewerPanel extends JPanel implements ViewerCloseable, Searchabl
     private JButton btnNext;
 
     // Búsqueda (Ctrl+F): como cada página se renderiza como imagen, se salta
-    // a la página que contiene la coincidencia (extraída con PDFTextStripper).
+    // a la página que contiene la coincidencia y se resaltan en amarillo las
+    // apariciones de esa página, usando las coordenadas de texto de PDFBox.
     private String[] pageTexts;
+    private List<List<TextPosition>> pagePositions;
     private final List<Integer> matchPages = new ArrayList<>();
     private int currentMatch = -1;
     private String lastQuery = "";
@@ -89,17 +99,68 @@ public class PdfViewerPanel extends JPanel implements ViewerCloseable, Searchabl
 
         SwingWorker<BufferedImage, Void> worker = new SwingWorker<>() {
             protected BufferedImage doInBackground() throws Exception {
-                return renderer.renderImageWithDPI(index, 120);
+                return renderer.renderImageWithDPI(index, RENDER_DPI);
             }
             protected void done() {
                 try {
-                    imageLabel.setIcon(new ImageIcon(get()));
+                    BufferedImage img = get();
+                    paintMatchHighlights(img, index);
+                    imageLabel.setIcon(new ImageIcon(img));
                 } catch (Exception ignored) {
                     // si falla una página puntual, se deja el contenido anterior visible
                 }
             }
         };
         worker.execute();
+    }
+
+    /** Pinta en amarillo, sobre la imagen ya renderizada, todas las apariciones de la búsqueda activa en esta página. */
+    private void paintMatchHighlights(BufferedImage img, int pageIndex) {
+        if (lastQuery == null || lastQuery.isBlank() || pageTexts == null
+                || pageIndex >= pageTexts.length || pageTexts[pageIndex] == null) {
+            return;
+        }
+        List<int[]> ranges = findRangesInPage(pageIndex, lastQuery);
+        if (ranges.isEmpty()) return;
+
+        List<TextPosition> positions = pagePositions.get(pageIndex);
+        Graphics2D g2 = img.createGraphics();
+        g2.setColor(MATCH_COLOR);
+        for (int[] range : ranges) {
+            Rectangle2D.Float rect = unionRect(positions, range[0], range[1]);
+            if (rect == null) continue;
+            g2.fillRect(
+                    Math.round(rect.x * SCALE),
+                    Math.round(rect.y * SCALE),
+                    Math.max(1, Math.round(rect.width * SCALE)),
+                    Math.max(1, Math.round(rect.height * SCALE)));
+        }
+        g2.dispose();
+    }
+
+    private List<int[]> findRangesInPage(int pageIndex, String query) {
+        List<int[]> ranges = new ArrayList<>();
+        String text = pageTexts[pageIndex];
+        String q = query.toLowerCase();
+        int idx = 0;
+        while ((idx = text.indexOf(q, idx)) >= 0) {
+            ranges.add(new int[]{idx, idx + q.length()});
+            idx += q.length();
+        }
+        return ranges;
+    }
+
+    /** Rectángulo (en puntos PDF) que envuelve el rango de caracteres [start, end) de una página. */
+    private Rectangle2D.Float unionRect(List<TextPosition> positions, int start, int end) {
+        Rectangle2D.Float union = null;
+        for (int i = start; i < end && i < positions.size(); i++) {
+            TextPosition tp = positions.get(i);
+            if (tp == null) continue;
+            float h = tp.getHeightDir();
+            Rectangle2D.Float r = new Rectangle2D.Float(tp.getXDirAdj(), tp.getYDirAdj() - h, tp.getWidthDirAdj(), h);
+            union = (union == null) ? r : (Rectangle2D.Float) union.createUnion(r);
+        }
+        return union;
     }
 
     private JButton navBtn(String text) {
@@ -117,20 +178,63 @@ public class PdfViewerPanel extends JPanel implements ViewerCloseable, Searchabl
         try { document.close(); } catch (Exception ignored) {}
     }
 
-    /** Extrae el texto de cada página una sola vez (bajo demanda, al buscar por primera vez). */
+    /** Extrae texto y posiciones de cada página una sola vez (bajo demanda, al buscar por primera vez). */
     private void ensurePageTexts() {
         if (pageTexts != null) return;
         pageTexts = new String[pageCount];
-        try {
-            PDFTextStripper stripper = new PDFTextStripper();
-            for (int i = 0; i < pageCount; i++) {
+        pagePositions = new ArrayList<>(pageCount);
+        for (int i = 0; i < pageCount; i++) {
+            try {
+                PositionCapturingStripper stripper = new PositionCapturingStripper();
                 stripper.setStartPage(i + 1);
                 stripper.setEndPage(i + 1);
-                pageTexts[i] = stripper.getText(document).toLowerCase();
+                stripper.getText(document);
+                pageTexts[i] = stripper.text.toString();
+                pagePositions.add(stripper.positions);
+            } catch (Exception ex) {
+                // Si falla la extracción (PDF escaneado/protegido), esa página simplemente no tendrá resultados
+                pageTexts[i] = "";
+                pagePositions.add(new ArrayList<>());
             }
-        } catch (Exception ex) {
-            // Si falla la extracción (PDF escaneado/protegido), la búsqueda simplemente no encuentra nada
-            pageTexts = new String[pageCount];
+        }
+    }
+
+    /**
+     * Extractor de texto que además guarda, alineada carácter a carácter, la
+     * posición de cada uno ({@code null} para espacios/saltos de línea
+     * insertados por el propio extractor). Permite luego convertir un rango
+     * de coincidencia (inicio, fin) en un rectángulo para resaltar sobre la
+     * imagen renderizada de la página.
+     */
+    private static class PositionCapturingStripper extends PDFTextStripper {
+        final StringBuilder text = new StringBuilder();
+        final List<TextPosition> positions = new ArrayList<>();
+
+        PositionCapturingStripper() throws IOException { super(); }
+
+        @Override
+        protected void writeString(String string, List<TextPosition> textPositions) {
+            int n = Math.min(string.length(), textPositions.size());
+            for (int i = 0; i < n; i++) {
+                text.append(Character.toLowerCase(string.charAt(i)));
+                positions.add(textPositions.get(i));
+            }
+            for (int i = n; i < string.length(); i++) {
+                text.append(Character.toLowerCase(string.charAt(i)));
+                positions.add(null);
+            }
+        }
+
+        @Override
+        protected void writeWordSeparator() {
+            text.append(' ');
+            positions.add(null);
+        }
+
+        @Override
+        protected void writeLineSeparator() {
+            text.append('\n');
+            positions.add(null);
         }
     }
 
@@ -150,7 +254,7 @@ public class PdfViewerPanel extends JPanel implements ViewerCloseable, Searchabl
     @Override
     public boolean findNext(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recomputeMatches(query);
-        if (matchPages.isEmpty()) return false;
+        if (matchPages.isEmpty()) { renderPage(currentPage); return false; }
         currentMatch = (currentMatch + 1) % matchPages.size();
         renderPage(matchPages.get(currentMatch));
         return true;
@@ -159,7 +263,7 @@ public class PdfViewerPanel extends JPanel implements ViewerCloseable, Searchabl
     @Override
     public boolean findPrevious(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recomputeMatches(query);
-        if (matchPages.isEmpty()) return false;
+        if (matchPages.isEmpty()) { renderPage(currentPage); return false; }
         currentMatch = (currentMatch - 1 + matchPages.size()) % matchPages.size();
         renderPage(matchPages.get(currentMatch));
         return true;
