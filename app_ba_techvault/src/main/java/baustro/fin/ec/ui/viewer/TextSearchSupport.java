@@ -1,15 +1,26 @@
 package baustro.fin.ec.ui.viewer;
 
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Lógica de búsqueda de texto compartida por los visores basados en
  * {@link JTextComponent} (texto plano y DOCX). Encuentra todas las
- * coincidencias de una consulta y selecciona/hace scroll a la actual.
+ * coincidencias de una consulta, las resalta en amarillo (la actual en
+ * ámbar) y hace scroll hasta la coincidencia activa.
  */
 final class TextSearchSupport {
+
+    private static final Highlighter.HighlightPainter PAINTER =
+            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 235, 59));
+    private static final Highlighter.HighlightPainter PAINTER_CURRENT =
+            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 160, 0));
 
     private final JTextComponent comp;
     private final List<int[]> matches = new ArrayList<>();
@@ -39,7 +50,7 @@ final class TextSearchSupport {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
         if (matches.isEmpty()) return false;
         current = (current + 1) % matches.size();
-        select();
+        applyHighlights();
         return true;
     }
 
@@ -47,14 +58,24 @@ final class TextSearchSupport {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
         if (matches.isEmpty()) return false;
         current = (current - 1 + matches.size()) % matches.size();
-        select();
+        applyHighlights();
         return true;
     }
 
-    private void select() {
-        int[] m = matches.get(current);
-        comp.requestFocusInWindow();
-        comp.select(m[0], m[1]);
+    /** Pinta de amarillo todas las coincidencias y de ámbar la actual, con scroll hasta ella. */
+    private void applyHighlights() {
+        Highlighter hl = comp.getHighlighter();
+        hl.removeAllHighlights();
+        try {
+            for (int i = 0; i < matches.size(); i++) {
+                int[] m = matches.get(i);
+                hl.addHighlight(m[0], m[1], i == current ? PAINTER_CURRENT : PAINTER);
+            }
+            int[] cur = matches.get(current);
+            comp.setCaretPosition(cur[0]);
+            Rectangle r = comp.modelToView2D(cur[0]).getBounds();
+            if (r != null) comp.scrollRectToVisible(r);
+        } catch (BadLocationException ignored) {}
     }
 
     int getMatchCount() { return matches.size(); }
@@ -62,7 +83,7 @@ final class TextSearchSupport {
     int getCurrentMatchIndex() { return current; }
 
     void clear() {
-        comp.select(0, 0);
+        comp.getHighlighter().removeAllHighlights();
         matches.clear();
         current = -1;
         lastQuery = "";
