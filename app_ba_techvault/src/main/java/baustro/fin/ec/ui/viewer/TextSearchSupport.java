@@ -37,18 +37,18 @@ final class TextSearchSupport {
         lastQuery = query;
         if (query == null || query.isBlank()) return;
 
-        String text = comp.getText().toLowerCase();
-        String q = query.toLowerCase();
-        int idx = 0;
-        while ((idx = text.indexOf(q, idx)) >= 0) {
-            matches.add(new int[]{idx, idx + q.length()});
-            idx += q.length();
+        String text = comp.getText();
+        int qLen = query.length();
+        for (int i = 0; i + qLen <= text.length(); i++) {
+            if (text.regionMatches(true, i, query, 0, qLen)) {
+                matches.add(new int[]{i, i + qLen});
+            }
         }
     }
 
     boolean findNext(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
-        if (matches.isEmpty()) return false;
+        if (matches.isEmpty()) { comp.getHighlighter().removeAllHighlights(); return false; }
         current = (current + 1) % matches.size();
         applyHighlights();
         return true;
@@ -56,7 +56,7 @@ final class TextSearchSupport {
 
     boolean findPrevious(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
-        if (matches.isEmpty()) return false;
+        if (matches.isEmpty()) { comp.getHighlighter().removeAllHighlights(); return false; }
         current = (current - 1 + matches.size()) % matches.size();
         applyHighlights();
         return true;
