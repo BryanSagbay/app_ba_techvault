@@ -1,26 +1,29 @@
 package baustro.fin.ec.ui.viewer;
 
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
-import java.awt.Color;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Lógica de búsqueda de texto compartida por los visores basados en
  * {@link JTextComponent} (texto plano y DOCX). Encuentra todas las
- * coincidencias de una consulta, las resalta en amarillo (la actual en
- * ámbar) y hace scroll hasta la coincidencia activa.
+ * coincidencias de una consulta y selecciona/hace scroll a la actual
+ * usando {@code select()} (el mismo mecanismo con el que Swing pinta la
+ * selección normal de texto).
+ *
+ * <p>Nota: NO se usa {@link javax.swing.text.Highlighter} con pintores
+ * personalizados (como se hizo antes) porque {@code DefaultHighlightPainter}
+ * calcula el rectángulo a pintar en base a la geometría de las vistas, y esa
+ * geometría se calcula mal cuando el documento mezcla tamaños de fuente
+ * distintos en la misma línea o tiene íconos incrustados (exactamente el
+ * caso de DOCX: negritas, encabezados, imágenes). El resultado visible era
+ * que se "resaltaba" texto que no correspondía a la coincidencia real,
+ * aunque el offset calculado internamente sí era correcto. {@code select()}
+ * no tiene ese problema porque usa el mismo pintado nativo carácter por
+ * carácter que usa Swing para cualquier selección manual de texto.
  */
-final class TextSearchSupport {
-
-    private static final Highlighter.HighlightPainter PAINTER =
-            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 235, 59));
-    private static final Highlighter.HighlightPainter PAINTER_CURRENT =
-            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 160, 0));
+public final class TextSearchSupport {
 
     private final JTextComponent comp;
     private final List<int[]> matches = new ArrayList<>();
@@ -36,7 +39,7 @@ final class TextSearchSupport {
      * SIN pasar el texto completo a minúsculas. Esto es a propósito: hacer
      * String.toLowerCase() sobre todo el documento puede cambiar la cantidad
      * de caracteres con ciertos símbolos, desalineando los índices de todo
-     * lo que viene después y pintando texto que no tiene nada que ver.
+     * lo que viene después.
      */
     private void recompute(String query) {
         matches.clear();
@@ -56,43 +59,34 @@ final class TextSearchSupport {
 
     boolean findNext(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
-        if (matches.isEmpty()) { comp.getHighlighter().removeAllHighlights(); return false; }
+        if (matches.isEmpty()) { comp.select(0, 0); return false; }
         current = (current + 1) % matches.size();
-        applyHighlights();
+        select();
         return true;
     }
 
     boolean findPrevious(String query) {
         if (!query.equalsIgnoreCase(lastQuery)) recompute(query);
-        if (matches.isEmpty()) { comp.getHighlighter().removeAllHighlights(); return false; }
+        if (matches.isEmpty()) { comp.select(0, 0); return false; }
         current = (current - 1 + matches.size()) % matches.size();
-        applyHighlights();
+        select();
         return true;
     }
 
-    private void applyHighlights() {
-        Highlighter hl = comp.getHighlighter();
-        hl.removeAllHighlights();
-        for (int i = 0; i < matches.size(); i++) {
-            int[] m = matches.get(i);
-            try {
-                hl.addHighlight(m[0], m[1], i == current ? PAINTER_CURRENT : PAINTER);
-            } catch (BadLocationException ex) {
-                // si UNA coincidencia falla, seguimos con las demás en vez de abortar todo el resaltado
-            }
-        }
-        try {
-            int[] cur = matches.get(current);
-            comp.setCaretPosition(cur[0]);
-            Rectangle r = comp.modelToView2D(cur[0]).getBounds();
-            if (r != null) comp.scrollRectToVisible(r);
-        } catch (BadLocationException ignored) {}
+    private void select() {
+        int[] m = matches.get(current);
+        comp.requestFocusInWindow();
+        // select() usa el pintado nativo de selección de Swing: preciso
+        // carácter por carácter, sin los problemas de alineación visual
+        // que tiene un Highlighter personalizado en texto con estilos mixtos.
+        comp.select(m[0], m[1]);
     }
 
     int getMatchCount() { return matches.size(); }
 
     int getCurrentMatchIndex() { return current; }
 
+    /** Texto real que corresponde a la coincidencia actual (útil para depurar desalineamientos). */
     String getMatchedText() {
         if (current < 0 || current >= matches.size()) return "";
         int[] m = matches.get(current);
@@ -104,7 +98,7 @@ final class TextSearchSupport {
     }
 
     void clear() {
-        comp.getHighlighter().removeAllHighlights();
+        comp.select(0, 0);
         matches.clear();
         current = -1;
         lastQuery = "";
