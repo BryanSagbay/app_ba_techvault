@@ -4,12 +4,13 @@ import baustro.fin.ec.ui.UIConstants;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-/** Vista previa simple para archivos de texto plano (TXT, LOG, SQL, JSON, etc.). */
+/** Vista previa simple para archivos de texto plano (TXT, LOG, SQL, JSON, CSV, etc.). */
 public class TxtViewerPanel extends JPanel implements SearchableViewer {
 
     private final JTextArea area;
@@ -38,10 +39,23 @@ public class TxtViewerPanel extends JPanel implements SearchableViewer {
         area.setBorder(new EmptyBorder(16, 20, 16, 20));
         search = new TextSearchSupport(area);
 
-        JScrollPane sp = new JScrollPane(area);
-        sp.setBorder(null);
-        sp.getViewport().setBackground(UIConstants.BG_CARD);
-        add(sp, BorderLayout.CENTER);
+        JScrollPane textScroll = new JScrollPane(area);
+        textScroll.setBorder(null);
+        textScroll.getViewport().setBackground(UIConstants.BG_CARD);
+
+        // Misma "tarjeta" enmarcada que Word/Excel: el texto no toca los bordes del
+        // panel, queda dentro de un recuadro con margen sobre el fondo gris del visor.
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(UIConstants.BG_CARD);
+        card.setBorder(new LineBorder(UIConstants.BORDER_LINE, 1));
+        card.add(textScroll, BorderLayout.CENTER);
+
+        JPanel page = new JPanel(new BorderLayout());
+        page.setBackground(UIConstants.BG_SURFACE);
+        page.setBorder(new EmptyBorder(18, 18, 18, 18));
+        page.add(card, BorderLayout.CENTER);
+
+        add(page, BorderLayout.CENTER);
     }
 
     @Override public boolean findNext(String query) { return search.findNext(query); }
