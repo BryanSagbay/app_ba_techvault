@@ -2,13 +2,19 @@ package baustro.fin.ec.ui.viewer;
 
 import baustro.fin.ec.ui.UIConstants;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -23,10 +29,17 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
     private static final Color MATCH_COLOR = new Color(255, 235, 59);
     private static final Color MATCH_COLOR_CURRENT = new Color(255, 160, 0);
 
+    /** Ancho mínimo y máximo (en px) permitido por columna al autoajustar según su contenido. */
+    private static final int MIN_COL_WIDTH = 70;
+    private static final int MAX_COL_WIDTH = 420;
+
     private final Workbook workbook;
     private final JTabbedPane tabs = new JTabbedPane();
     private final List<JTable> sheetTables = new ArrayList<>();
     private final List<int[]> matches = new ArrayList<>(); // [sheetIndex, row, col]
+    // Color de fondo original de cada celda del archivo, tal como viene en el Excel
+    // (por hoja: [fila][columna] -> color, o null si la celda no tiene relleno).
+    private final List<Color[][]> sheetCellColors = new ArrayList<>();
     private int current = -1;
     private String lastQuery = "";
 
@@ -45,7 +58,7 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         DataFormatter fmt = new DataFormatter();
         for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
             Sheet sheet = workbook.getSheetAt(s);
-            tabs.addTab(sheet.getSheetName(), buildSheetTable(sheet, fmt, s));
+            tabs.addTab(sheet.getSheetName(), buildSheetPage(sheet, fmt, s));
         }
 
         if (tabs.getTabCount() == 0) {
@@ -57,7 +70,7 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         }
     }
 
-    private JScrollPane buildSheetTable(Sheet sheet, DataFormatter fmt, int sheetIndex) {
+    private JComponent buildSheetPage(Sheet sheet, DataFormatter fmt, int sheetIndex) {
         int maxCols = 0;
         for (Row row : sheet) {
             maxCols = Math.max(maxCols, row.getLastCellNum());
@@ -69,14 +82,28 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         };
         for (int c = 0; c < maxCols; c++) model.addColumn(columnName(c));
 
+        int[] colWidth = new int[maxCols];
+        for (int c = 0; c < maxCols; c++) colWidth[c] = MIN_COL_WIDTH;
+
+        List<Color[]> colorRows = new ArrayList<>();
         for (Row row : sheet) {
             Object[] values = new Object[maxCols];
+            Color[] rowColors = new Color[maxCols];
             for (int c = 0; c < maxCols; c++) {
                 Cell cell = row.getCell(c, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                values[c] = fmt.formatCellValue(cell);
+                String text = fmt.formatCellValue(cell);
+                values[c] = text;
+                rowColors[c] = extractCellColor(cell);
+                // Ancho aproximado según la longitud del texto, para que las columnas
+                // no se compriman cuando hay muchas: se calcula el ancho ideal y se
+                // deja scroll horizontal en vez de forzar todo dentro del panel visible.
+                int estimated = 14 + text.length() * 7;
+                colWidth[c] = Math.max(colWidth[c], Math.min(estimated, MAX_COL_WIDTH));
             }
             model.addRow(values);
+            colorRows.add(rowColors);
         }
+        sheetCellColors.add(colorRows.toArray(new Color[0][]));
 
         JTable table = new JTable(model);
         table.setBackground(UIConstants.BG_CARD);
@@ -84,15 +111,67 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         table.setGridColor(UIConstants.BORDER_LINE);
         table.setRowHeight(24);
         table.setSelectionBackground(UIConstants.BG_ROW_SEL);
+        table.setFillsViewportHeight(false);
+        // Selección por celda (como en Excel real) en vez de seleccionar la fila
+        // completa al hacer clic; arrastrando el mouse se puede marcar un rango.
+        table.setCellSelectionEnabled(true);
         table.getTableHeader().setBackground(UIConstants.BG_SURFACE);
         table.getTableHeader().setForeground(UIConstants.TEXT_2);
         table.setDefaultRenderer(Object.class, new HighlightCellRenderer(sheetIndex));
+
+        // Autoajuste de ancho de columna según contenido, sin comprimir: la tabla no
+        // se reduce al ancho del viewport (autoResize OFF) y aparece scroll horizontal
+        // cuando la suma de columnas supera el ancho visible.
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        for (int c = 0; c < maxCols; c++) {
+            table.getColumnModel().getColumn(c).setPreferredWidth(colWidth[c]);
+        }
+
         sheetTables.add(table);
 
-        JScrollPane sp = new JScrollPane(table);
-        sp.getViewport().setBackground(UIConstants.BG_CARD);
-        sp.setBorder(null);
-        return sp;
+        // La tabla vive en su propio scroll (con encabezado fijo al desplazar filas y
+        // scroll horizontal para hojas con muchas columnas).
+        JScrollPane tableScroll = new JScrollPane(table);
+        tableScroll.getViewport().setBackground(UIConstants.BG_CARD);
+        tableScroll.setBorder(null);
+        tableScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        // "Tarjeta" con borde propio: la hoja ya no ocupa todo el panel de lado a lado,
+        // queda enmarcada y con un margen respecto al resto del visor, igual que el
+        // documento Word se muestra como una página en vez de estirarse por completo.
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(UIConstants.BG_CARD);
+        card.setBorder(new LineBorder(UIConstants.BORDER_LINE, 1));
+        card.add(tableScroll, BorderLayout.CENTER);
+
+        JPanel page = new JPanel(new BorderLayout());
+        page.setBackground(UIConstants.BG_SURFACE);
+        page.setBorder(new EmptyBorder(18, 18, 18, 18));
+        page.add(card, BorderLayout.CENTER);
+
+        return page;
+    }
+
+    /**
+     * Obtiene el color de relleno original de la celda (tal como se ve en Excel), para
+     * poder diferenciar filas/celdas resaltadas por el usuario en su archivo. Solo se
+     * resuelve el color directo (RGB) definido en la celda; si el archivo usa colores de
+     * tema sin RGB explícito, o no tiene relleno, se devuelve null y se pinta el fondo normal.
+     */
+    private Color extractCellColor(Cell cell) {
+        if (cell == null) return null;
+        CellStyle style = cell.getCellStyle();
+        if (style == null || style.getFillPattern() != FillPatternType.SOLID_FOREGROUND) return null;
+
+        if (style instanceof XSSFCellStyle xssfStyle) {
+            XSSFColor xc = xssfStyle.getFillForegroundColorColor();
+            if (xc == null) return null;
+            byte[] rgb = xc.getRGB();
+            if (rgb == null) return null;
+            return new Color(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+        }
+        // HSSF (.xls) u otras implementaciones: se omite el color indexado por simplicidad.
+        return null;
     }
 
     /** Pinta de amarillo las celdas que coinciden con la búsqueda y de ámbar la actual. */
@@ -105,18 +184,42 @@ public class XlsxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                                                          boolean hasFocus, int row, int col) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+            Color originalColor = getOriginalColor(sheetIndex, row, col);
             if (isCurrentMatch(sheetIndex, row, col)) {
                 c.setBackground(MATCH_COLOR_CURRENT);
                 c.setForeground(Color.BLACK);
             } else if (isMatch(sheetIndex, row, col)) {
                 c.setBackground(MATCH_COLOR);
                 c.setForeground(Color.BLACK);
-            } else if (!isSelected) {
+            } else if (isSelected) {
+                // se conserva el color de selección por defecto de Swing
+            } else if (originalColor != null) {
+                // Respeta el color de relleno tal como viene en el archivo Excel, para que
+                // el usuario pueda seguir distinguiendo qué filas debe completar.
+                c.setBackground(originalColor);
+                c.setForeground(bestTextColorFor(originalColor));
+            } else {
                 c.setBackground(UIConstants.BG_CARD);
                 c.setForeground(UIConstants.TEXT_1);
             }
             return c;
         }
+    }
+
+    /** Color de fondo original (según el Excel) para una celda, o null si no tenía relleno. */
+    private Color getOriginalColor(int sheetIndex, int row, int col) {
+        if (sheetIndex < 0 || sheetIndex >= sheetCellColors.size()) return null;
+        Color[][] rows = sheetCellColors.get(sheetIndex);
+        if (row < 0 || row >= rows.length) return null;
+        Color[] cols = rows[row];
+        if (col < 0 || col >= cols.length) return null;
+        return cols[col];
+    }
+
+    /** Elige texto negro o blanco según el brillo del fondo, para mantener buen contraste. */
+    private Color bestTextColorFor(Color bg) {
+        double luminance = (0.299 * bg.getRed() + 0.587 * bg.getGreen() + 0.114 * bg.getBlue()) / 255.0;
+        return luminance > 0.6 ? Color.BLACK : Color.WHITE;
     }
 
     private boolean isMatch(int sheetIndex, int row, int col) {
