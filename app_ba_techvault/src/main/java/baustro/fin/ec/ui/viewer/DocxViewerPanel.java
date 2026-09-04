@@ -31,6 +31,9 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable, Searchab
     private final XWPFDocument doc;
     private final TextSearchSupport search;
 
+    /** Ancho de "hoja" simulado (aprox. carta a ~96dpi), para que el documento no se estire a todo el panel. */
+    private static final int PAGE_WIDTH = 850;
+
     public DocxViewerPanel(File file) throws Exception {
         setLayout(new BorderLayout());
         setBackground(UIConstants.BG_SURFACE);
@@ -42,14 +45,38 @@ public class DocxViewerPanel extends JPanel implements ViewerCloseable, Searchab
         JTextPane pane = new JTextPane();
         pane.setEditable(false);
         pane.setBackground(UIConstants.BG_CARD);
-        pane.setBorder(new EmptyBorder(24, 32, 24, 32));
+        pane.setBorder(new EmptyBorder(36, 44, 36, 44));
 
         renderBody(pane);
         search = new TextSearchSupport(pane);
 
-        JScrollPane sp = new JScrollPane(pane);
+        // "Hoja": el JTextPane tiene ancho fijo tipo página y se centra sobre un fondo
+        // gris (BG_SURFACE), en vez de estirarse para ocupar todo el ancho del visor.
+        // Se fuerza el ancho ANTES de leer el alto preferido, para que el texto se
+        // ajuste (wrap) al ancho de página y el alto calculado sea el correcto.
+        pane.setSize(new Dimension(PAGE_WIDTH, Short.MAX_VALUE));
+        int wrappedHeight = pane.getPreferredSize().height;
+        Dimension pageSize = new Dimension(PAGE_WIDTH, wrappedHeight);
+        pane.setPreferredSize(pageSize);
+        pane.setMinimumSize(pageSize);
+        pane.setMaximumSize(pageSize);
+        pane.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel sheetHolder = new JPanel();
+        sheetHolder.setLayout(new BoxLayout(sheetHolder, BoxLayout.Y_AXIS));
+        sheetHolder.setBackground(UIConstants.BG_SURFACE);
+        sheetHolder.setBorder(new EmptyBorder(24, 0, 24, 0));
+        sheetHolder.add(pane);
+
+        // Wrapper que centra la "hoja" horizontalmente y respeta su alto real dentro del scroll.
+        JPanel centerWrap = new JPanel(new GridBagLayout());
+        centerWrap.setBackground(UIConstants.BG_SURFACE);
+        centerWrap.add(sheetHolder);
+
+        JScrollPane sp = new JScrollPane(centerWrap);
         sp.setBorder(null);
-        sp.getViewport().setBackground(UIConstants.BG_CARD);
+        sp.getVerticalScrollBar().setUnitIncrement(16);
+        sp.getViewport().setBackground(UIConstants.BG_SURFACE);
         add(sp, BorderLayout.CENTER);
     }
 
